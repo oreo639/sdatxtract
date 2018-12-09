@@ -1,0 +1,42 @@
+#  autotools/cmake garbage.
+build
+cmakebuild
+.deps
+.dirstamp
+autom4te.cache
+stamp-h1
+aclocal.m4 
+compile 
+config.guess 
+config.log 
+config.status 
+config.sub 
+configure 
+depcomp 
+install-sh 
+missing 
+Makefile.in 
+Makefile 
+config.h
+config.h.in
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+
+# generated files
+*.a
+*.bin
+*.d
+*.elf
+*.map
+*.o
+*.obj
+*.tsk
+*.sdat
+*.nds
+*.exe
+sdatxtract
+
+# macOS Garbage
+.DS_Store
+._*
