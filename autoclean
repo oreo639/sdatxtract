@@ -1,0 +1,3 @@
+#!/bin/bash
+rm aclocal.m4 compile config.guess config.log config.status config.sub configure depcomp install-sh missing Makefile.in Makefile src/config.h src/config.h.in
+rm -r autom4te.cache src/.deps
