@@ -1,4 +1,6 @@
 # SDATxtract
+[![Build Status](https://travis-ci.com/Oreo639/sdatxtract.svg?branch=master)](https://travis-ci.com/Oreo639/sdatxtract)
+
 A comand line Nintendo ds Sound DATa extraction utility.
 
 ## Building
