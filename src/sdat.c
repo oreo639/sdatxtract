@@ -123,7 +123,7 @@ void SDAT_close(SDAT *sdatfile)
 bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	FILE *fp = fopen(filepath, "rb");
 	char *sdat_data_tmp;
-	uint32_t u32_tmp, pSeqNamePtrList, pBnkNamePtrList, pWANamePtrList, pTrmNamePtrList, INFOoffs, SYMBoffs, FAToffs;
+	uint32_t u32_tmp, pSeqNamePtrList = 0, pBnkNamePtrList = 0, pWANamePtrList = 0, pTrmNamePtrList = 0, INFOoffs, SYMBoffs, FAToffs;
 	
 	//printf("OFS:%d\nSIZE:%d\n", ndsfile->sdatoffset, ndsfile->sdatsize);
 	fseek(fp, ndsfile->sdatoffset, SEEK_SET);
