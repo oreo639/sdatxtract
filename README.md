@@ -3,6 +3,10 @@
 
 A comand line Nintendo ds Sound DATa extraction utility.
 
+What is it?
+
+It is a utility for dumping sdats from nds files, extracting contained files from sdats, and converting the contained files to standard formats.
+
 ## Building
 You can use either cmake or autotools to build this program and I will cover both.
 ### Autotools
