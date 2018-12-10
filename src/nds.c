@@ -107,7 +107,7 @@ bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata) {
 	for (uint32_t i = 0; i + 4 < size; i++) {
 		if(!memcmp((nds_data_tmp + i), sdatMagic, sizeof(sdatMagic))) {
 			verbose("SDAT found!\n");
-			if ((FILE_getU8((nds_data_tmp + i) + 0xC) < 0x100) && (FILE_getUint((nds_data_tmp + i) + 0x10) < 0x10000)) {
+			if ((FILE_getShort((nds_data_tmp + i) + 0xC) < 0x100) && (FILE_getUint((nds_data_tmp + i) + 0x10) < 0x10000)) {
 				verbose("SDAT confirmed!\n");
 				verbose("Num:%d\n", ndsdata->sdatnum);
 				
