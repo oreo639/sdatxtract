@@ -123,7 +123,7 @@ void SDAT_close(SDAT *sdatfile)
 bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	FILE *fp = fopen(filepath, "rb");
 	char *sdat_data_tmp;
-	uint32_t u32_tmp, pSeqNamePtrList = 0, pBnkNamePtrList = 0, pWANamePtrList = 0, pTrmNamePtrList = 0, INFOoffs, SYMBoffs, FAToffs;
+	uint32_t u32_tmp, sseqSYMBlist = 0, sbnkSYMBlist = 0, swarSYMBlist = 0, strmSYMBlist = 0, INFOoffs, SYMBoffs, FAToffs;
 	
 	//printf("OFS:%d\nSIZE:%d\n", ndsfile->sdatoffset, ndsfile->sdatsize);
 	fseek(fp, ndsfile->sdatoffset, SEEK_SET);
@@ -168,17 +168,17 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	verbose("strmsNum:%d\n", strmsNum);
 	
 	if (SYMBoffs != 0) {
-		/*Sequence Name PtrList*/
-		pSeqNamePtrList = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x08);
+		/*Sequence symbol List*/
+		sseqSYMBlist = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x08);
 
-		/* Bank Name PtrList*/
-		pBnkNamePtrList = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x10);
+		/* Bank symbol list*/
+		sbnkSYMBlist = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x10);
 
-		/*Wav Arcive Name PtrList*/
-		pWANamePtrList = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x14);
+		/*Wav Arcive symbol list*/
+		swarSYMBlist = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x14);
 		
-		/*Stream Name PtrList*/
-		pTrmNamePtrList = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x24);
+		/*Stream symbol list*/
+		strmSYMBlist = FILE_getUint((sdat_data_tmp + SYMBoffs) + 0x24);
 	}
 	
 	sdatfile->sseqName.name = malloc((sseqsNum + 1) * sizeof(char*));
@@ -188,8 +188,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < sseqsNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pSeqNamePtrList != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pSeqNamePtrList + 4 + i * 4));
+		if (SYMBoffs != 0 && sseqSYMBlist != 0 && bUseFname == true) {
+			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (sseqSYMBlist + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);
 			} else {
@@ -204,8 +204,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < sbnksNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pBnkNamePtrList != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pBnkNamePtrList + 4 + i * 4));
+		if (SYMBoffs != 0 && sbnkSYMBlist != 0 && bUseFname == true) {
+			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (sbnkSYMBlist + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);
 			} else {
@@ -220,8 +220,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < swarsNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pWANamePtrList != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pWANamePtrList + 4 + i * 4));
+		if (SYMBoffs != 0 && swarSYMBlist != 0 && bUseFname == true) {
+			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (swarSYMBlist + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);
 			} else {
@@ -236,8 +236,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < strmsNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pTrmNamePtrList != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pTrmNamePtrList + 4 + i * 4));
+		if (SYMBoffs != 0 && strmSYMBlist != 0 && bUseFname == true) {
+			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (strmSYMBlist + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);
 			} else {

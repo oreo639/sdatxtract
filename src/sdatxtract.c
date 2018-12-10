@@ -20,7 +20,7 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 		
 		if (bExtractSdat) {
 			char out[MAX_PATH + 1];
-			snprintf(out, MAX_PATH, "%s/%d.sdat", outputdir_part1, i);
+			snprintf(out, MAX_PATH, "%s/%04d.sdat", outputdir_part1, i);
 			printf("Dump Sdat %d\n", i);
 			NDS_dumpSDAT(filepath, out, &ndsdata->ndsfile[i]);
 		} else {
