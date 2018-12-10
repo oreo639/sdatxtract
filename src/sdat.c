@@ -188,7 +188,7 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < sseqsNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pSeqNamePtrList != 0) {
+		if (SYMBoffs != 0 && pSeqNamePtrList != 0 && bUseFname == true) {
 			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pSeqNamePtrList + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);
@@ -204,7 +204,7 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < sbnksNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pBnkNamePtrList != 0) {
+		if (SYMBoffs != 0 && pBnkNamePtrList != 0 && bUseFname == true) {
 			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pBnkNamePtrList + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);
@@ -220,7 +220,7 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < swarsNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pWANamePtrList != 0) {
+		if (SYMBoffs != 0 && pWANamePtrList != 0 && bUseFname == true) {
 			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pWANamePtrList + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);
@@ -236,7 +236,7 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	for (uint32_t i = 0; i < strmsNum; i++) {
 		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && pTrmNamePtrList != 0) {
+		if (SYMBoffs != 0 && pTrmNamePtrList != 0 && bUseFname == true) {
 			u32_tmp = FILE_getUint((sdat_data_tmp + SYMBoffs) + (pTrmNamePtrList + 4 + i * 4));
 			if (u32_tmp != 0) {
 				memcpy(&temp, (sdat_data_tmp + SYMBoffs) + u32_tmp, 32);

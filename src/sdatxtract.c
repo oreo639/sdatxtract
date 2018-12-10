@@ -43,6 +43,7 @@ bool extractAudio(const char *filepath) {
 	verbose("Options: (1=enabled/2=disabled)\n");
 	verbose("bDecodeFile:%d\n", bDecodeFile);
 	verbose("bVerboseMessages:%d\n", bVerboseMessages);
+	verbose("bUseFname:%d\n", bUseFname);
 	verbose("======================\n");
 	
 	NDS ndsdata;

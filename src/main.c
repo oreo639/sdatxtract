@@ -7,9 +7,12 @@ bool bVerboseMessages = false;
 
 bool bExtractSdat = false;
 
+bool bUseFname = true;
+
 void printUsage(void) {
 	const char *options[] = {
 		"", "-c", "decode files", 
+		"", "-n", "force output with numericaly assigned filenames", 
 		"", "-S", "extract sdat only",
 		"", "-V", "show verbose messages",
 		"", "--help or -h", "show this usage",
@@ -33,11 +36,14 @@ bool GET_OptionChar(const char opt)
 	case 'c':
 		bDecodeFile = true;
 		return true;
-	case 'S':
-		bExtractSdat = true;
+	case 'n':
+		bUseFname = false;
 		return true;
 	case 'h':
 		printUsage();
+		return true;
+	case 'S':
+		bExtractSdat = true;
 		return true;
 	case 'V':
 		bVerboseMessages = true;
