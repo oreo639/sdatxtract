@@ -14,9 +14,9 @@ matrix:
       sudo: required
       compiler: clang
     - os: osx
-      compiler: clang
-    - os: osx
       compiler: gcc
+    - os: osx
+      compiler: clang
 
 addons:
   apt:
@@ -25,5 +25,6 @@ addons:
       - cmake
 
 script:
-  - cmake .
+  - mkdir build && cd build
+  - cmake ..
   - make -j2 sdatxtract
