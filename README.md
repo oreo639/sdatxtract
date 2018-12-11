@@ -33,8 +33,7 @@ SDAT documentation: Without the hard work of:
 + Nintendon - the author of ndssndext.exe
 + DJ Bouche - the author of sdattool.exe
 + VGMTrans - the author of VGMTrans.exe
-+ And others
-On documenting the format. I would never have been able to finish this.
++ And others on documenting the format. I would never have been able to finish this without them.
 
 You can find them here:
 + http://www.feshrine.net/hacking/doc/nds-sdat.html
