@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __SX_NDS_H__
+#define __SX_NDS_H__
+
 typedef struct {
 	uint32_t sdatoffset;
 	uint32_t sdatsize;
@@ -14,3 +16,4 @@ bool NDS_getGameTitle(const char* filepath, char *buf);
 bool NDS_getGameCode(const char* filepath, char *buf);
 bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata);
 bool NDS_dumpSDAT(const char *filepath, const char* fileout, NDSfile_t *ndsfile);
+#endif

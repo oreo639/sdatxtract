@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __SX_SDAT_H__
+#define __SX_SDAT_H__
+
 #include "nds.h"
 
 typedef struct {
@@ -31,7 +33,6 @@ typedef struct {
 	SDAT_FILE* swarfile;
 	SDAT_FILE* sbnkfile;
 	SDAT_FILE* strmfile;
-	uint32_t filetotal;
 	uint32_t files;
 } SDAT;
 
@@ -41,3 +42,4 @@ bool SDAT_fakeNds(const char* filepath, NDS *ndsdata);
 bool SDAT_getFiles(const char* filepath, NDSfile_t *ndsfile, SDAT* sdatfile);
 void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* sdatfile);
 void SDAT_close(SDAT *sdatfile);
+#endif

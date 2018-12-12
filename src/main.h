@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __SDATXTRACT_MAIN_H__
+#define __SDATXTRACT_MAIN_H__
 
 #include <stdio.h>
 #include <stdint.h>
@@ -26,3 +27,4 @@ extern bool bDecodeFile;
 extern bool bVerboseMessages;
 extern bool bExtractSdat;
 extern bool bUseFname;
+#endif

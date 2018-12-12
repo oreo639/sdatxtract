@@ -25,7 +25,7 @@ bool NDS_isNds(const char* filepath) {
 	fread(&identifier, 1, 1, fp);
 	
 	fclose(fp);
-	verbose("IDENT=%d\n", identifier);
+	verbose("NDS IDENT:%d\n", identifier);
 	if (identifier == 0x00 || identifier == 0x02 || identifier == 0x03) {
 		return true;
 	}
@@ -109,14 +109,14 @@ bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata) {
 			verbose("SDAT found!\n");
 			if ((FILE_getShort((nds_data_tmp + i) + 0xC) < 0x100) && (FILE_getUint((nds_data_tmp + i) + 0x10) < 0x10000)) {
 				verbose("SDAT confirmed!\n");
-				verbose("Num:%d\n", ndsdata->sdatnum);
+				verbose("Reading sdat %d.\n", ndsdata->sdatnum);
 				
 				ndsdata->ndsfile = realloc(ndsdata->ndsfile, (ndsdata->sdatnum+0x01) * sizeof(NDSfile_t));
 				
 				ndsdata->ndsfile[ndsdata->sdatnum].sdatoffset = i;
 				ndsdata->ndsfile[ndsdata->sdatnum].sdatsize = FILE_getUint(nds_data_tmp + i + 0x08);
 				
-				verbose("Location:%d\nSize:%d\n", ndsdata->ndsfile[ndsdata->sdatnum].sdatoffset,
+				verbose("Sdat offset:%d\nSdat Size:%d\n", ndsdata->ndsfile[ndsdata->sdatnum].sdatoffset,
 					ndsdata->ndsfile[ndsdata->sdatnum].sdatsize);
 				ndsdata->sdatnum++;
 			}
@@ -138,7 +138,6 @@ bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata) {
 bool NDS_dumpSDAT(const char *filepath, const char* fileout, NDSfile_t *ndsfile) {
 	char *sdat_data_tmp;
 	
-	//printf("OFS:%d\nSIZE:%d\n", ndsfile->sdatoffset, ndsfile->sdatsize);
 	FILE *fp = fopen(filepath, "rb");
 	
 	fseek(fp, ndsfile->sdatoffset, SEEK_SET);

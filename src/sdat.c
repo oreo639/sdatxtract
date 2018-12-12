@@ -268,13 +268,13 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 		else
 			sdatfile->sseqName.ident[i] = FILE_getShort((sdat_data_tmp + INFOoffs) + pSeqInfo);
 		sdatfile->sseqName.banks = FILE_getShort((sdat_data_tmp + INFOoffs) + pSeqInfo);
-		//printf("%d  ", sdatfile->sseqName.ident[i]);
 		//next bytes would be vol, cpr, ppr, and ply respectively, whatever the heck those last 3 stand for
 	}
 
 	uint32_t pBnkInfoPtrList = FILE_getUint((sdat_data_tmp + INFOoffs) + 0x10);
 	uint32_t nBnkInfos = FILE_getUint((sdat_data_tmp + INFOoffs) + pBnkInfoPtrList);
 	sdatfile->sbnkName.ident = malloc((nBnkInfos + 1) * sizeof(uint16_t*));
+	
 	for (uint32_t i = 0; i < nBnkInfos; i++) {
 		uint32_t pBnkInfo = FILE_getUint((sdat_data_tmp + INFOoffs) + (pBnkInfoPtrList + 4 + i * 4));
 		if (pBnkInfo == 0)
@@ -285,8 +285,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	uint32_t pWAInfoList = FILE_getUint((sdat_data_tmp + INFOoffs) + 0x14);
 	uint32_t nWAInfos = FILE_getUint((sdat_data_tmp + INFOoffs) + pWAInfoList);
-	//printf("%d JJ:%d ", nWAInfos,pWAInfoList);
 	sdatfile->swarName.ident = malloc((nWAInfos + 1) * sizeof(uint16_t*));
+	
 	for (uint32_t i = 0; i < nWAInfos; i++) {
 		uint32_t pWAInfo = FILE_getUint((sdat_data_tmp + INFOoffs) + (pWAInfoList + 4 + i * 4));
 		if (pWAInfo == 0)
@@ -297,19 +297,15 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	
 	uint32_t pStrmInfoList = FILE_getUint((sdat_data_tmp + INFOoffs) + 0x24);
 	uint32_t nStrmInfos = FILE_getUint((sdat_data_tmp + INFOoffs) + pStrmInfoList);
-	//printf("%d JJ:%d ", nStrmInfos,pStrmInfoList);
 	sdatfile->strmName.ident = malloc((nStrmInfos + 1) * sizeof(uint16_t*));
+	
 	for (uint32_t i = 0; i < nStrmInfos; i++) {
 		uint32_t nStrmInfo = FILE_getUint((sdat_data_tmp + INFOoffs) + (pStrmInfoList + 4 + i * 4));
 		if (nStrmInfo == 0)
 			sdatfile->strmName.ident[i] = (uint16_t) -1;
 		else
 			sdatfile->strmName.ident[i] = FILE_getShort((sdat_data_tmp + INFOoffs) + nStrmInfo);
-	}
-	
-	sdatfile->filetotal = sdatfile->sseqName.numFiles + sdatfile->swarName.numFiles + 
-		sdatfile->sbnkName.numFiles + sdatfile->strmName.numFiles; //Just to make it easier for later.
-		
+	}	
 
 	sdatfile->files = FILE_getUint((sdat_data_tmp + FAToffs) + 0x08);
 	sdatfile->sseqfile = malloc(sizeof(SDAT_FILE) * sdatfile->sseqName.numFiles);
@@ -326,9 +322,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->sseqName.ident[i] * 0x10);
 		sdatfile->sseqfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->sseqfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
-		//printf("Done,%d", i);
 	}
-	//currentoffs++;
+
 	for(uint32_t i = 0; i < sdatfile->swarName.numFiles; i++){
 		if (sdatfile->swarName.ident[i] == (uint16_t) -1) {
 			sdatfile->swarfile[i].filesize = 0;
@@ -337,9 +332,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->swarName.ident[i] * 0x10);
 		sdatfile->swarfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->swarfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
-		//printf("Done,%d", i);
 	} 
-	//currentoffs++;
+
 	for(uint32_t i = 0; i < sdatfile->sbnkName.numFiles; i++){
 		if (sdatfile->sbnkName.ident[i] == (uint16_t) -1) {
 			sdatfile->sbnkfile[i].filesize = 0;
@@ -348,9 +342,8 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->sbnkName.ident[i] * 0x10);
 		sdatfile->sbnkfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->sbnkfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
-		//printf("Done,%d", i);
 	}
-	//currentoffs++;
+
 	for(uint32_t i = 0; i < sdatfile->strmName.numFiles; i++){
 		if (sdatfile->strmName.ident[i] == (uint16_t) -1) {
 			sdatfile->strmfile[i].filesize = 0;
@@ -359,8 +352,6 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->strmName.ident[i] * 0x10);
 		sdatfile->strmfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->strmfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
-		//cout << FILE_getUint(current_pos) << endl;
-		//printf("Done,%d\n", FILE_getUint(current_pos));
 	}
 
 	free(sdat_data_tmp);
@@ -408,10 +399,12 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 			if(!sseq2midConvert(nssseq)){
 				printf("SSEQ convert error.\n");
 				sseq2midDelete(nssseq);
+				continue;
 			}
 			if(!sseq2midWriteMidiFile(nssseq, outputfile)){
 				printf("MIDI write error.\n");
 				sseq2midDelete(nssseq);
+				continue;
 			}
 			else numSSEQ++;
 		} else {
@@ -454,6 +447,7 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 			if(!nsStrmWriteToWaveFile(nsstrm, outputfile)) {
 				printf("WAVE write error.\n");
 				nsStrmDelete(nsstrm);
+				continue;
 			}
 			else numSTRM++;
 			nsStrmDelete(nsstrm);
