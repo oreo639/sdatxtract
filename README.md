@@ -11,7 +11,8 @@ It is a utility for dumping sdats from nds files, extracting contained files fro
 You can use either cmake or autotools to build this program and I will cover both.
 ### Autotools
 1. Run `./autogen.sh`. This will automaticly run all the nessary auto* tools that are needed to compile this program.
-2. Type `make`
+2. Run `./configure`
+3. Type `make`
 ### Cmake
 1. Run `mkdir build && cd build`
 2. Then run `cmake ..`
