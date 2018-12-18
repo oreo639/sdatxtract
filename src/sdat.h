@@ -17,6 +17,7 @@ typedef struct {
 } SDAT_META;
 
 typedef struct {
+	char *file;
 	uint32_t fileoffset;
 	uint32_t filesize;
 } SDAT_FILE;

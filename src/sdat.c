@@ -90,16 +90,16 @@ bool SDAT_fakeNds(const char *filepath, NDS *ndsdata) {
 
 void sdatnamefree(SDAT *sdatfile) {
 	/* Clear strings */
-	for(int i = 0; i < sdatfile->sseqName.numFiles; i++)
+	for(uint32_t i = 0; i < sdatfile->sseqName.numFiles; i++)
 		free(sdatfile->sseqName.name[i]);
 
-	for(int i = 0; i < sdatfile->sbnkName.numFiles; i++)
+	for(uint32_t i = 0; i < sdatfile->sbnkName.numFiles; i++)
 		free(sdatfile->sbnkName.name[i]);
 	
-	for(int i = 0; i < sdatfile->swarName.numFiles; i++)
+	for(uint32_t i = 0; i < sdatfile->swarName.numFiles; i++)
 		free(sdatfile->swarName.name[i]);
 
-	for(int i = 0; i < sdatfile->strmName.numFiles; i++)
+	for(uint32_t i = 0; i < sdatfile->strmName.numFiles; i++)
 		free(sdatfile->strmName.name[i]);
 
 	verbose("Freed text\n");
@@ -320,8 +320,9 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 			continue;
 			}
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->sseqName.ident[i] * 0x10);
-		sdatfile->sseqfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
+		sdatfile->sseqfile[i].fileoffset = FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->sseqfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
+		sdatfile->sseqfile[i].file = FILE_loadFileFromBuff(sdat_data_tmp + sdatfile->sseqfile[i].fileoffset, sdatfile->sseqfile[i].filesize);
 	}
 
 	for(uint32_t i = 0; i < sdatfile->swarName.numFiles; i++){
@@ -330,8 +331,9 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 			continue;
 			}
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->swarName.ident[i] * 0x10);
-		sdatfile->swarfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
+		sdatfile->swarfile[i].fileoffset = FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->swarfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
+		sdatfile->swarfile[i].file = FILE_loadFileFromBuff(sdat_data_tmp + sdatfile->swarfile[i].fileoffset, sdatfile->swarfile[i].filesize);
 	} 
 
 	for(uint32_t i = 0; i < sdatfile->sbnkName.numFiles; i++){
@@ -340,8 +342,9 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 			continue;
 			}
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->sbnkName.ident[i] * 0x10);
-		sdatfile->sbnkfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
+		sdatfile->sbnkfile[i].fileoffset = FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->sbnkfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
+		sdatfile->sbnkfile[i].file = FILE_loadFileFromBuff(sdat_data_tmp + sdatfile->sbnkfile[i].fileoffset, sdatfile->sbnkfile[i].filesize);
 	}
 
 	for(uint32_t i = 0; i < sdatfile->strmName.numFiles; i++){
@@ -350,8 +353,9 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 			continue;
 			}
 		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->strmName.ident[i] * 0x10);
-		sdatfile->strmfile[i].fileoffset = ndsfile->sdatoffset + FILE_getUint((sdat_data_tmp + current_pos));
+		sdatfile->strmfile[i].fileoffset = FILE_getUint((sdat_data_tmp + current_pos));
 		sdatfile->strmfile[i].filesize = FILE_getUint((sdat_data_tmp + current_pos) + 0x04);
+		sdatfile->strmfile[i].file = FILE_loadFileFromBuff(sdat_data_tmp + sdatfile->strmfile[i].fileoffset, sdatfile->strmfile[i].filesize);
 	}
 
 	free(sdat_data_tmp);
@@ -362,7 +366,7 @@ bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 
 void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* sdatfile) {
 	char outputfile[MAX_PATH + 1], outputsseq[MAX_PATH - 34], outputsbnk[MAX_PATH - 34], outputstrm[MAX_PATH - 34], outputswar[MAX_PATH - 34];
-	char *file_buff;
+	//char *file_buff;
 	FILE *fp_in = fopen(filepath, "rb");
 	/*SWAR *swar = NULL;
 	SWAV *swav = NULL;
@@ -381,15 +385,13 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 	FILE_mkdir(outputstrm);
 	FILE_mkdir(outputswar);
 	
-	for (int i = 0; i < sdatfile->sseqName.numFiles; i++) {
+	for (uint32_t i = 0; i < sdatfile->sseqName.numFiles; i++) {
 		if (sdatfile->sseqfile[i].filesize == 0)
 			continue;
 		
-		file_buff = FILE_loadFileFromFP(fp_in, sdatfile->sseqfile[i].fileoffset, sdatfile->sseqfile[i].filesize);
-		
 		if(bDecodeFile){
 			snprintf(outputfile, MAX_PATH, "%s/%s.midi", outputsseq, sdatfile->sseqName.name[i]);
-			nssseq = sseq2midCreate((unsigned char*)file_buff, sdatfile->sseqfile[i].filesize, false);
+			nssseq = sseq2midCreate((unsigned char*)sdatfile->sseqfile[i].file, sdatfile->sseqfile[i].filesize, false);
 			if(!nssseq){
 				printf("SSEQ open error.\n");
 				continue;
@@ -410,36 +412,33 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 		} else {
 			//determine filename
 			snprintf(outputfile, MAX_PATH, "%s/%s.sseq", outputsseq, sdatfile->sseqName.name[i]);
-			FILE_outPutFileFromBuff(outputfile, file_buff, sdatfile->sseqfile[i].filesize);
+			FILE_outPutFileFromBuff(outputfile, sdatfile->sseqfile[i].file, sdatfile->sseqfile[i].filesize);
 			numSSEQ++;
 		}
-		free(file_buff);
+		free(sdatfile->sseqfile[i].file);
 	}
 	
-	for (int i = 0; i < sdatfile->sbnkName.numFiles; i++) {
+	for (uint32_t i = 0; i < sdatfile->sbnkName.numFiles; i++) {
 		if (sdatfile->sbnkfile[i].filesize == 0)
-			continue;
-		
-		file_buff = FILE_loadFileFromFP(fp_in, sdatfile->sbnkfile[i].fileoffset, sdatfile->sbnkfile[i].filesize);	
+			continue;	
 		
 		//determine filename
 		snprintf(outputfile, MAX_PATH, "%s/%s.sbnk", outputsbnk, sdatfile->sbnkName.name[i]);
 		//FO_outPutFileFromFP(fp_in, outputfile, sdatfile->swarfile[i].fileoffset, sdatfile->swarfile[i].filesize);
 		
-		FILE_outPutFileFromBuff(outputfile, file_buff, sdatfile->sbnkfile[i].filesize);
-		free(file_buff);
+		FILE_outPutFileFromBuff(outputfile, sdatfile->sbnkfile[i].file, sdatfile->sbnkfile[i].filesize);
+		free(sdatfile->sbnkfile[i].file);
 		numSBNK++;
 	}
 	
-	for (int i = 0; i < sdatfile->strmName.numFiles; i++) {
+	for (uint32_t i = 0; i < sdatfile->strmName.numFiles; i++) {
 		if (sdatfile->strmfile[i].filesize == 0)
 			continue;
-		file_buff = FILE_loadFileFromFP(fp_in, sdatfile->strmfile[i].fileoffset, sdatfile->strmfile[i].filesize);
 		
 		if(bDecodeFile){
 			snprintf(outputfile, MAX_PATH, "%s/%s.wav", outputstrm, sdatfile->strmName.name[i]);
 			//STRM open
-			nsstrm = nsStrmCreate((unsigned char*)file_buff, sdatfile->strmfile[i].filesize);
+			nsstrm = nsStrmCreate((unsigned char*)sdatfile->strmfile[i].file, sdatfile->strmfile[i].filesize);
 			if (!nsstrm) {
 				printf("STRM open error.\n");
 				continue;
@@ -453,24 +452,22 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 			nsStrmDelete(nsstrm);
 		} else {
 			snprintf(outputfile, MAX_PATH, "%s/%s.strm", outputstrm, sdatfile->strmName.name[i]);
-			FILE_outPutFileFromBuff(outputfile, file_buff, sdatfile->strmfile[i].filesize);
+			FILE_outPutFileFromBuff(outputfile, sdatfile->strmfile[i].file, sdatfile->strmfile[i].filesize);
 			numSTRM++;
 		}
-		free(file_buff);
+		free(sdatfile->strmfile[i].file);
 	}
 	
-	for (int i = 0; i < sdatfile->swarName.numFiles; i++) {
+	for (uint32_t i = 0; i < sdatfile->swarName.numFiles; i++) {
 		if (sdatfile->swarfile[i].filesize == 0)
-			continue;
-		
-		file_buff = FILE_loadFileFromFP(fp_in, sdatfile->swarfile[i].fileoffset, sdatfile->swarfile[i].filesize);	
+			continue;	
 		
 		//determine filename
 		snprintf(outputfile, MAX_PATH, "%s/%s.swar", outputswar, sdatfile->swarName.name[i]);
 		//FO_outPutFileFromFP(fp_in, outputfile, sdatfile->swarfile[i].fileoffset, sdatfile->swarfile[i].filesize);
 		
-		FILE_outPutFileFromBuff(outputfile, file_buff, sdatfile->swarfile[i].filesize);
-		free(file_buff);
+		FILE_outPutFileFromBuff(outputfile, sdatfile->swarfile[i].file, sdatfile->swarfile[i].filesize);
+		free(sdatfile->swarfile[i].file);
 		numSWAR++;
 	}
 

@@ -26,7 +26,7 @@ FILE(GLOB SOURCES "src/*.c" "src/decoder/*.c")
 ADD_EXECUTABLE(sdatxtract ${SOURCES})
 
 if(MSVC)
-  TARGET_COMPILE_OPTIONS(sdatxtract PRIVATE /W4 /WX)
+  TARGET_COMPILE_OPTIONS(sdatxtract PRIVATE /W4 /WX- -D_CRT_SECURE_NO_WARNINGS)
 else(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   TARGET_COMPILE_OPTIONS(sdatxtract PRIVATE -Wall -Wconversion -Wsign-conversion -Wno-long-long -pedantic)
 endif()

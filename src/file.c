@@ -1,5 +1,9 @@
 #include "main.h"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 
 void FILE_mkdir(const char* fpath) {
 	#ifdef __MINGW32__
@@ -17,6 +21,13 @@ char *FILE_loadFileFromFP(FILE* fp_in, uint32_t offset, uint32_t size) {
 	file_buff = malloc(size);
 	fread(file_buff, 1, size, fp_in);
 	return file_buff;
+}
+
+char *FILE_loadFileFromBuff(char* in_buff, uint32_t size) {
+	char* out_buff;
+	out_buff = malloc(size);
+	memcpy(out_buff, in_buff, size);
+	return out_buff;
 }
 
 void FILE_outPutFileFromBuff(const char* out, char* file_buff, uint32_t size) {
