@@ -60,7 +60,7 @@ bool SDAT_getUniqueId(const char *filepath, char *buf) {
 bool SDAT_fakeNds(const char *filepath, NDS *ndsdata) {
 	FILE *fp = fopen(filepath, "rb");
 	long unsigned int size;
-	char *sdat_data_tmp;
+	uint8_t *sdat_data_tmp;
 	
 	if(!fp){
 		return false;
@@ -122,7 +122,7 @@ void SDAT_close(SDAT *sdatfile)
 
 bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
 	FILE *fp = fopen(filepath, "rb");
-	char *sdat_data_tmp;
+	uint8_t *sdat_data_tmp;
 	uint32_t u32_tmp, sseqSYMBlist = 0, sbnkSYMBlist = 0, swarSYMBlist = 0, strmSYMBlist = 0, INFOoffs, SYMBoffs, FAToffs;
 	
 	//printf("OFS:%d\nSIZE:%d\n", ndsfile->sdatoffset, ndsfile->sdatsize);
@@ -391,7 +391,7 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 		
 		if(bDecodeFile){
 			snprintf(outputfile, MAX_PATH, "%s/%s.midi", outputsseq, sdatfile->sseqName.name[i]);
-			nssseq = sseq2midCreate((unsigned char*)sdatfile->sseqfile[i].file, sdatfile->sseqfile[i].filesize, false);
+			nssseq = sseq2midCreate(sdatfile->sseqfile[i].file, sdatfile->sseqfile[i].filesize, false);
 			if(!nssseq){
 				printf("SSEQ open error.\n");
 				continue;
@@ -438,7 +438,7 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 		if(bDecodeFile){
 			snprintf(outputfile, MAX_PATH, "%s/%s.wav", outputstrm, sdatfile->strmName.name[i]);
 			//STRM open
-			nsstrm = nsStrmCreate((unsigned char*)sdatfile->strmfile[i].file, sdatfile->strmfile[i].filesize);
+			nsstrm = nsStrmCreate(sdatfile->strmfile[i].file, sdatfile->strmfile[i].filesize);
 			if (!nsstrm) {
 				printf("STRM open error.\n");
 				continue;

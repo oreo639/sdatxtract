@@ -7,7 +7,9 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 		return false;
 	}
 	
-	SDAT sdatfile[ndsdata->sdatnum];
+	SDAT *sdatfile;
+	
+	sdatfile = malloc(ndsdata->sdatnum*sizeof(SDAT));
 	
 	for (int i = 0; i < ndsdata->sdatnum; i++) {
 		if(ndsdata->sdatnum > 1) {
@@ -32,6 +34,7 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 			}
 		}
 	}
+	free(sdatfile);
 	return true;
 }
 

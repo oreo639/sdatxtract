@@ -84,7 +84,7 @@ bool NDS_getGameCode(const char* filepath, char *buf){
 bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata) {
 	FILE *fp = fopen(filepath, "rb");
 	long unsigned int size;
-	char *nds_data_tmp;
+	uint8_t *nds_data_tmp;
 	uint8_t sdatMagic[] = {'S','D','A','T',0xFF,0xFE,0x00,0x01};
 	
 	if(!fp){
