@@ -148,5 +148,6 @@ bool NDS_dumpSDAT(const char *filepath, const char* fileout, NDSfile_t *ndsfile)
 	FILE *fpout = fopen(fileout, "wb");
 	fwrite(sdat_data_tmp, 1, ndsfile->sdatsize, fpout);
 	fclose(fpout);
+	free(sdat_data_tmp);
 	return true;
 }
