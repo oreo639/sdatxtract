@@ -117,6 +117,7 @@ void SDAT_close(SDAT *sdatfile)
 	free(sdatfile->swarfile);
 	free(sdatfile->sbnkfile);
 	free(sdatfile->strmfile);
+	
 	verbose("Freed sdat fat filedata\n");
 }
 
@@ -409,6 +410,7 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 				continue;
 			}
 			else numSSEQ++;
+			sseq2midDelete(nssseq);
 		} else {
 			//determine filename
 			snprintf(outputfile, MAX_PATH, "%s/%s.sseq", outputsseq, sdatfile->sseqName.name[i]);
@@ -427,8 +429,8 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 		//FO_outPutFileFromFP(fp_in, outputfile, sdatfile->swarfile[i].fileoffset, sdatfile->swarfile[i].filesize);
 		
 		FILE_outPutFileFromBuff(outputfile, sdatfile->sbnkfile[i].file, sdatfile->sbnkfile[i].filesize);
-		free(sdatfile->sbnkfile[i].file);
 		numSBNK++;
+		free(sdatfile->sbnkfile[i].file);
 	}
 	
 	for (uint32_t i = 0; i < sdatfile->strmName.numFiles; i++) {
@@ -467,8 +469,8 @@ void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* s
 		//FO_outPutFileFromFP(fp_in, outputfile, sdatfile->swarfile[i].fileoffset, sdatfile->swarfile[i].filesize);
 		
 		FILE_outPutFileFromBuff(outputfile, sdatfile->swarfile[i].file, sdatfile->swarfile[i].filesize);
-		free(sdatfile->swarfile[i].file);
 		numSWAR++;
+		free(sdatfile->swarfile[i].file);
 	}
 
 	printf("Total written files:\n");
