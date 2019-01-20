@@ -6,13 +6,17 @@
 
 
 void FILE_mkdir(const char* fpath) {
+	struct stat sb;
+	if (stat(fpath, &sb)) {
 	#ifdef __MINGW32__
-	mkdir(fpath);
+		mkdir(fpath);
 	#elif _MSC_VER
-	CreateDirectory(fpath, NULL);
+		CreateDirectory(fpath, NULL);
 	#else
-	mkdir(fpath, 0777);
+		mkdir(fpath, 0777);
 	#endif
+	verbose("Created directory %s\n", fpath);
+	}
 }
 
 uint8_t *FILE_loadFileFromFP(FILE* fp_in, uint32_t offset, uint32_t size) {

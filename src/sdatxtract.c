@@ -6,20 +6,19 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 	if (filepath == NULL || ndsdata->ndsfile == NULL) {
 		return false;
 	}
-	
+
 	SDAT *sdatfile;
-	
 	sdatfile = malloc(ndsdata->sdatnum*sizeof(SDAT));
-	
+
 	for (int i = 0; i < ndsdata->sdatnum; i++) {
 		if(ndsdata->sdatnum > 1) {
 			snprintf(output_dir, MAX_PATH, "%s/%d", outputdir_part1, i);
 		} else {
 			snprintf(output_dir, MAX_PATH, "%s", outputdir_part1);
 		}
-		
+
 		FILE_mkdir(output_dir);
-		
+
 		if (bExtractSdat) {
 			char out[MAX_PATH + 1];
 			snprintf(out, MAX_PATH, "%s/sound_data%04d.sdat", outputdir_part1, i);
@@ -33,6 +32,7 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 				SDAT_close(&sdatfile[i]);
 			}
 		}
+		free(ndsdata->ndsfile[i].sdatImage);
 	}
 	free(sdatfile);
 	return true;
@@ -41,23 +41,23 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 bool extractAudio(const char *filepath) {
 	char titleStr[13], codeStr[5];
 	char output_dir[MAX_PATH + 1];
-	
+
 	verbose("======================\n");
 	verbose("Options: (1=enabled/2=disabled)\n");
 	verbose("bDecodeFile:%d\n", bDecodeFile);
 	verbose("bVerboseMessages:%d\n", bVerboseMessages);
 	verbose("bUseFname:%d\n", bUseFname);
 	verbose("======================\n");
-	
+
 	NDS ndsdata;
-	
+
 	if (SDAT_isSDAT(filepath)) {
 		snprintf(titleStr, 13, "SDAT");
 		if (!SDAT_getUniqueId(filepath, codeStr)) {
 			printf("Failed to open SDAT.\n");
 			return false;
 		}
-		
+
 		if (!SDAT_fakeNds(filepath, &ndsdata)) {
 			printf("Failed to read SDAT.\n");
 			return false;
@@ -75,7 +75,7 @@ bool extractAudio(const char *filepath) {
 		if (!NDS_isNds(filepath)) {
 			printf("[WARN]:The file does not appear to be an nds file or an sdat file. The extraction will continue anyways.\n");
 		}
-		
+
 		if (!NDS_getSDAToffset(filepath, &ndsdata)) {
 			printf("No valid SDAT found.\n");
 			return false;

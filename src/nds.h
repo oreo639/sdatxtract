@@ -2,7 +2,7 @@
 #define __SX_NDS_H__
 
 typedef struct {
-	uint32_t sdatoffset;
+	uint8_t *sdatImage;
 	uint32_t sdatsize;
 } NDSfile_t;
 
