@@ -1,3 +1,7 @@
 #!/bin/bash
-rm aclocal.m4 compile config.guess config.log config.status config.sub configure depcomp install-sh missing Makefile.in Makefile src/config.h src/config.h.in
-rm -r autom4te.cache src/.deps
+rm aclocal.m4 compile config.guess config.log config.status config.sub configure depcomp install-sh missing Makefile.in Makefile src/config.h
+find . -type f -name ".dirstamp" -delete
+find . -type f -name "stamp-h1" -delete
+find . -type f -name "config.h.in*" -delete
+find . -type d -name ".deps" -exec rm -r {} +
+rm -r autom4te.cache
