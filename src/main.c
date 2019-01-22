@@ -15,7 +15,6 @@ void printUsage(void) {
 		"", "-n", "force output with numericaly assigned filenames", 
 		"", "-S", "extract sdat only",
 		"", "-V", "show verbose messages",
-		"", "-I", "show compile info",
 		"", "--help or -h", "show this usage",
 	};
 	printf("%s v%s\n", APP_NAME, APP_VERSION_FULL);
