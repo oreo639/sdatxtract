@@ -91,7 +91,7 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 			printf("Processing Sdat %d\n", i);
 			sucess = SDAT_getFiles(filepath, &ndsdata->ndsfile[i], &sdatfile[i]);
 			if (sucess == true) {
-				outputFiles(filepath, output_dir, &sdatfile[i]);
+				outputFiles(output_dir, &sdatfile[i]);
 				SDAT_close(&sdatfile[i]);
 			}
 		}
@@ -101,9 +101,8 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 	return true;
 }
 
-void outputFiles(const char* filepath, const char* outputdir_part1, SDAT* sdatfile) {
+void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
 	char outputfile[MAX_PATH + 1], outputsseq[MAX_PATH - 34], outputsbnk[MAX_PATH - 34], outputstrm[MAX_PATH - 34], outputswar[MAX_PATH - 34];
-	FILE *fp_in = fopen(filepath, "rb");
 	NSSwav *nsswav = NULL;
 	NSStrm *nsstrm = NULL;
 	Sseq2mid *nssseq = NULL;
@@ -253,5 +252,4 @@ void outputFiles(const char* filepath, const char* outputdir_part1, SDAT* sdatfi
 	printf("    SBNK:%d\n", numSBNK);
 	printf("    STRM:%d\n", numSTRM);
 	printf("    SWAR:%d\n", numSWAR);
-	fclose(fp_in);
 }
