@@ -2,6 +2,8 @@
  * sseq2mid.c: convert sseq into standard midi
  * presented by loveemu, feel free to redistribute
  * see sseq2midConvert to know conversion detail :)
+ *
+ *
  * Minor change to remove the main function an all other unnessary functions.
  */
 

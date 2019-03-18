@@ -41,6 +41,5 @@ bool SDAT_isSDAT(const char* filepath);
 bool SDAT_getUniqueId(const char* filepath, char *buf);
 bool SDAT_fakeNds(const char* filepath, NDS *ndsdata);
 bool SDAT_getFiles(const char* filepath, NDSfile_t *ndsfile, SDAT* sdatfile);
-void SDAT_outputFiles(const char* filepath, const char* outputdir_part1, SDAT* sdatfile);
 void SDAT_close(SDAT *sdatfile);
 #endif

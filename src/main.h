@@ -27,4 +27,5 @@ extern bool bDecodeFile;
 extern bool bVerboseMessages;
 extern bool bExtractSdat;
 extern bool bUseFname;
+extern bool bGetSwav;
 #endif

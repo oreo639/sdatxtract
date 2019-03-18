@@ -9,9 +9,12 @@ bool bExtractSdat = false;
 
 bool bUseFname = true;
 
+bool bGetSwav = false;
+
 void printUsage(void) {
 	const char *options[] = {
 		"", "-c", "decode files", 
+		"", "-x", "extract swav from swar",
 		"", "-n", "force output with numericaly assigned filenames", 
 		"", "-S", "extract sdat only",
 		"", "-V", "show verbose messages",
@@ -35,6 +38,9 @@ bool GET_OptionChar(const char opt)
 	{
 	case 'c':
 		bDecodeFile = true;
+		return true;
+	case 'x':
+		bGetSwav = true;
 		return true;
 	case 'n':
 		bUseFname = false;
