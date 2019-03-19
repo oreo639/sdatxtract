@@ -18,9 +18,6 @@ You can use either cmake or autotools to build this program and I will cover bot
 2. Then run `cmake ..`
 3. Once it is done, type `make`
 
-## TODO
-Add SWAR extraction and swav conversion. Finish nsseq and use that instead of sseq2mid. More testing. This is unfinished and subject to change. If I used your code without crediting you, please let me know either by relevant social media, or by the issue tracker.
-
 ## Credits
 Vgmtrans: Symb parser prety much riped from them, with minor changes being made to support this codebase ofc.
 
@@ -39,6 +36,8 @@ SDAT documentation: Without the hard work of:
 You can find them here:
 + http://www.feshrine.net/hacking/doc/nds-sdat.html
 + http://www.romhacking.net/documents/%5b469%5dnds_formats.htm#SDAT
+
+If I used your code without crediting you, please let me know either by relevant social media, or by the issue tracker.
 
 ## Copyright
 Read LICENSE.md for information.
