@@ -32,23 +32,15 @@ bool SDAT_isSDAT(const char *filepath) {
 
 bool SDAT_getUniqueId(const char *filepath, char *buf) {
 	FILE *fp = fopen(filepath, "rb");
-	long int size;
 	uint32_t data;
 
 	if(!fp){
 		return false;
 	}
 
-	fseek(fp, 0, SEEK_END);
-	size = ftell(fp);
-	if(size < 0x400){
-		fclose(fp);
-		return false;
-	}
 	fseek(fp, 0x1C, SEEK_SET);
 	fread(&data, 1, 4, fp);
 	snprintf(buf, 4, "%d", data);
-	buf[4] = '\0';
 
 	fclose(fp);
 
@@ -100,6 +92,9 @@ void sdatnamefree(SDAT *sdatfile) {
 		free(sdatfile->strmName.name[i]);
 
 	free(sdatfile->strmName.name);
+	free(sdatfile->swarName.name);
+	free(sdatfile->sbnkName.name);
+	free(sdatfile->sseqName.name);
 	verbose("Freed text\n");
 
 	free(sdatfile->sseqName.ident);
