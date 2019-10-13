@@ -203,8 +203,13 @@ void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
 		verbose("File %s\n", sdatfile->swarName.name[i]);
 		if(bDecodeFile || bGetSwav){
 			SWAR swar;
-			if(SWAREX_init(&swar, sdatfile->swarfile[i].file, sdatfile->swarfile[i].filesize) ){
-				printf("SWAR open error.\n");
+			int ret = 0;
+			if((ret = SWAREX_init(&swar, sdatfile->swarfile[i].file, sdatfile->swarfile[i].filesize))) {
+				if (ret == 1)
+					printf("SWAR open error: Did not pass validation.\nMay be corrupted?\n");
+				if (ret == 2)
+					printf("SWAR open error: No files found to extract.\n");
+
 				SWAREX_exit(&swar);
 				continue;
 			}
@@ -252,5 +257,5 @@ void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
 	printf("    SSEQ:%d\n", numSSEQ);
 	printf("    SBNK:%d\n", numSBNK);
 	printf("    STRM:%d\n", numSTRM);
-	printf("    SWAR:%d\n", numSWAR);
+	printf("    %s:%d\n", bDecodeFile ? "SWAV" : "SWAR", numSWAR);
 }

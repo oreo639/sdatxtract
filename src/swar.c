@@ -22,6 +22,7 @@ int SWAREX_init(SWAR* swar, uint8_t *image, uint32_t size) {
 			swar->file[i].filesize = swar->swarsize - FILE_getUint(current_pos);
 			return 0;
 		}
+		return 2;
 	}
 	return 1;
 }
