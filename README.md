@@ -25,7 +25,7 @@ Loveemu: Sseq2mid and strm2wav are used in this project.
 
 Ndssndext: Largely inspired by ndssndext, however do to the aplication being unlisenced, this application was rewriten.
 
-SDAT documentation: Without the hard work of:
+SDAT documentation; wouldn't be possible without the hard work of:
 + Crystal - the author of CrystalTile2.exe 
 + loveemu - the author of sseq2mid.exe, swave2wave.exe & strm2wave.exe
 + Nintendon - the author of ndssndext.exe
@@ -38,6 +38,9 @@ You can find them here:
 + http://www.romhacking.net/documents/%5b469%5dnds_formats.htm#SDAT
 
 If I used your code without crediting you, please let me know either by relevant social media, or by the issue tracker.
+
+## Other tools
++ [vgmtrans](https://github.com/vgmtrans/vgmtrans)
 
 ## Copyright
 Read LICENSE.md for information.
