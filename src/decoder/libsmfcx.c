@@ -51,9 +51,9 @@ bool smfInsertNoteOff(Smf* seq, int time, int channel, int track, int key, int v
   {
     byte noteOff[3];
 
-    noteOff[0] = (byte)SMF_EVENT_NOTEOFF | (byte)(channel % 16);
-    noteOff[1] = (byte)key;
-    noteOff[2] = (byte)velocity;
+    noteOff[0] = SMF_EVENT_NOTEOFF | (channel % 16);
+    noteOff[1] = key;
+    noteOff[2] = velocity;
     result = smfInsertEvent(seq, time, channel / 16, track, noteOff, sizeof(noteOff));
   }
   return result;
@@ -67,9 +67,9 @@ bool smfInsertNoteOn(Smf* seq, int time, int channel, int track, int key, int ve
   {
     byte noteOn[3];
 
-    noteOn[0] = (byte)SMF_EVENT_NOTEON | (byte)(channel % 16);
-    noteOn[1] = (byte)key;
-    noteOn[2] = (byte)velocity;
+    noteOn[0] = SMF_EVENT_NOTEON | (channel % 16);
+    noteOn[1] = key;
+    noteOn[2] = velocity;
     result = smfInsertEvent(seq, time, channel / 16, track, noteOn, sizeof(noteOn));
   }
   return result;
@@ -95,9 +95,9 @@ bool smfInsertKeyPress(Smf* seq, int time, int channel, int track, int key, int 
   {
     byte keyPress[3];
 
-    keyPress[0] = (byte)SMF_EVENT_KEYPRESS | (byte)(channel % 16);
-    keyPress[1] = (byte)key;
-    keyPress[2] = (byte)amount;
+    keyPress[0] = SMF_EVENT_KEYPRESS | (channel % 16);
+    keyPress[1] = key;
+    keyPress[2] = amount;
     result = smfInsertEvent(seq, time, channel / 16, track, keyPress, sizeof(keyPress));
   }
   return result;
@@ -111,9 +111,9 @@ bool smfInsertControl(Smf* seq, int time, int channel, int track, int controlNum
   {
     byte controlChange[3];
 
-    controlChange[0] = (byte)SMF_EVENT_CONTROL | (byte)(channel % 16);
-    controlChange[1] = (byte)controlNumber;
-    controlChange[2] = (byte)value;
+    controlChange[0] = SMF_EVENT_CONTROL | (channel % 16);
+    controlChange[1] = controlNumber;
+    controlChange[2] = value;
     result = smfInsertEvent(seq, time, channel / 16, track, controlChange, sizeof(controlChange));
   }
   return result;
@@ -127,8 +127,8 @@ bool smfInsertProgram(Smf* seq, int time, int channel, int track, int programNum
   {
     byte programChange[2];
 
-    programChange[0] = (byte)SMF_EVENT_PROGRAM | (byte)(channel % 16);
-    programChange[1] = (byte)programNumber;
+    programChange[0] = SMF_EVENT_PROGRAM | (channel % 16);
+    programChange[1] = programNumber;
     result = smfInsertEvent(seq, time, channel / 16, track, programChange, sizeof(programChange));
   }
   return result;
@@ -142,9 +142,9 @@ bool smfInsertChanPress(Smf* seq, int time, int channel, int track, int key, int
   {
     byte chanPress[3];
 
-    chanPress[0] = (byte)SMF_EVENT_CHANPRESS | (byte)(channel % 16);
-    chanPress[1] = (byte)key;
-    chanPress[2] = (byte)amount;
+    chanPress[0] = SMF_EVENT_CHANPRESS | (channel % 16);
+    chanPress[1] = key;
+    chanPress[2] = amount;
     result = smfInsertEvent(seq, time, channel / 16, track, chanPress, sizeof(chanPress));
   }
   return result;
@@ -159,9 +159,9 @@ bool smfInsertPitchBend(Smf* seq, int time, int channel, int track, int value)
     byte pitchBend[3];
 
     value += 8192;
-    pitchBend[0] = (byte)SMF_EVENT_PITCHBEND | (byte)(channel % 16);
-    pitchBend[1] = (byte) value & 0x7f;
-    pitchBend[2] = (byte) value >> 7;
+    pitchBend[0] = SMF_EVENT_PITCHBEND | (channel % 16);
+    pitchBend[1] = (unsigned int) value & 0x7f;
+    pitchBend[2] = (unsigned int) value >> 7;
     result = smfInsertEvent(seq, time, channel / 16, track, pitchBend, sizeof(pitchBend));
   }
   return result;
@@ -204,7 +204,7 @@ bool smfInsertMetaEvent(Smf* seq, int time, int track, int metaType, const byte*
     if(metaData)
     {
       metaData[0] = SMF_EVENT_META;
-      metaData[1] = (byte)metaType;
+      metaData[1] = metaType;
       smfWriteVarLength((unsigned int) metaLength, &metaData[2], metaLength);
       memcpy(&metaData[2 + metaLengthSize], data, metaLength);
       result = smfInsertEvent(seq, time, 0, track, metaData, metaDataSize);
@@ -220,7 +220,7 @@ bool smfInsertMetaText(Smf* seq, int time, int track, int metaType, const char* 
 
   if(text)
   {
-    result = smfInsertMetaEvent(seq, time, track, metaType, (byte*)text, strlen(text));
+    result = smfInsertMetaEvent(seq, time, track, metaType, text, strlen(text));
   }
   return result;
 }
@@ -254,7 +254,7 @@ bool smfInsertTempo(Smf* seq, int time, int track, int microSeconds)
   {
     byte metaTempo[3];
 
-    smfWriteByte(3, (unsigned)microSeconds, metaTempo, 3);
+    smfWriteByte(3, microSeconds, metaTempo, 3);
     result = smfInsertMetaEvent(seq, time, track, SMF_META_SETTEMPO, metaTempo, sizeof(metaTempo));
   }
   return result;

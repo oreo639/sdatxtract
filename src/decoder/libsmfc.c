@@ -381,7 +381,7 @@ bool smfTrackGetSizeProc(SmfEvent* event, void* customData)
 {
   SmfTrackGetSizeProcInfo* info = (SmfTrackGetSizeProcInfo*) customData;
   int deltaTime = event->time - info->prevEventTime;
-  size_t deltaTimeSize = smfGetVarLengthSize((unsigned)deltaTime);
+  size_t deltaTimeSize = smfGetVarLengthSize(deltaTime);
 
   info->trackSize += deltaTimeSize;
   info->trackSize += event->size;
@@ -430,11 +430,11 @@ bool smfTrackWriteProc(SmfEvent* event, void* customData)
   size_t bufferSize = info->bufferSize;
   size_t transferedSize = info->transferedSize;
   int deltaTime = event->time - info->prevEventTime;
-  size_t deltaTimeSize = smfGetVarLengthSize((unsigned)deltaTime);
+  size_t deltaTimeSize = smfGetVarLengthSize(deltaTime);
 
   if(bufferSize >= (transferedSize + deltaTimeSize))
   {
-    smfWriteVarLength((unsigned)deltaTime, &buffer[transferedSize], deltaTimeSize);
+    smfWriteVarLength(deltaTime, &buffer[transferedSize], deltaTimeSize);
     transferedSize += deltaTimeSize;
 
     if(bufferSize >= (transferedSize + event->size))
@@ -451,7 +451,7 @@ bool smfTrackWriteProc(SmfEvent* event, void* customData)
   }
   else
   {
-    smfWriteVarLength((unsigned)deltaTime, &buffer[transferedSize], bufferSize - transferedSize);
+    smfWriteVarLength(deltaTime, &buffer[transferedSize], bufferSize - transferedSize);
     transferedSize = bufferSize;
   }
 
@@ -732,7 +732,7 @@ bool smfReallocTrack(Smf* seq, int newNumTracks)
     result = true;
     if(newNumTracks > seq->numTracks)
     {
-      SmfTrack** newTracks = (SmfTrack**) realloc(seq->track, sizeof(SmfTrack*) * (unsigned)newNumTracks);
+      SmfTrack** newTracks = (SmfTrack**) realloc(seq->track, sizeof(SmfTrack*) * newNumTracks);
 
       if(newTracks)
       {

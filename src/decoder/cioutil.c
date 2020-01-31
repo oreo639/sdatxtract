@@ -38,25 +38,25 @@ char* removeExt(char* path)
 /* unsigned byte to signed */
  int utos1(unsigned int value)
 {
-  return (value & 0x80) ? -(signed)(value ^ 0xff)-1 : (signed)value;
+  return (value & 0x80) ? -(signed)(value ^ 0xff)-1 : value;
 }
 
 /* unsigned 2bytes to signed */
  int utos2(unsigned int value)
 {
-  return (value & 0x8000) ? -(signed)(value ^ 0xffff)-1 : (signed)value;
+  return (value & 0x8000) ? -(signed)(value ^ 0xffff)-1 : value;
 }
 
 /* unsigned 3bytes to signed */
  int utos3(unsigned int value)
 {
-  return (value & 0x800000) ? -(signed)(value ^ 0xffffff)-1 : (signed)value;
+  return (value & 0x800000) ? -(signed)(value ^ 0xffffff)-1 : value;
 }
 
 /* unsigned 4bytes to signed */
  int utos4(unsigned int value)
 {
-  return (value & 0x80000000) ? -(signed)(value ^ 0xffffffff)-1 : (signed)value;
+  return (value & 0x80000000) ? -(signed)(value ^ 0xffffffff)-1 : value;
 }
 
 /* get a byte */
@@ -105,7 +105,7 @@ char* removeExt(char* path)
  int mput1(int value, byte* data)
 {
   int lastPut = value;
-  data[0] = (byte)lastPut & 0xff;
+  data[0] = lastPut & 0xff;
   return lastPut & 0xff;
 }
 
@@ -113,9 +113,9 @@ char* removeExt(char* path)
  int mput2l(int value, byte* data)
 {
   int lastPut = value;
-  data[0] = (byte)lastPut & 0xff;
+  data[0] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[1] = (byte)lastPut & 0xff;
+  data[1] = lastPut & 0xff;
   return lastPut & 0xff;
 }
 
@@ -123,11 +123,11 @@ char* removeExt(char* path)
  int mput3l(int value, byte* data)
 {
   int lastPut = value;
-  data[0] = (byte)lastPut & 0xff;
+  data[0] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[1] = (byte)lastPut & 0xff;
+  data[1] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[2] = (byte)lastPut & 0xff;
+  data[2] = lastPut & 0xff;
   return lastPut & 0xff;
 }
 
@@ -135,13 +135,13 @@ char* removeExt(char* path)
  int mput4l(int value, byte* data)
 {
   int lastPut = value;
-  data[0] = (byte)lastPut & 0xff;
+  data[0] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[1] = (byte)lastPut & 0xff;
+  data[1] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[2] = (byte)lastPut & 0xff;
+  data[2] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[3] = (byte)lastPut & 0xff;
+  data[3] = lastPut & 0xff;
   return lastPut & 0xff;
 }
 
@@ -149,9 +149,9 @@ char* removeExt(char* path)
  int mput2b(int value, byte* data)
 {
   int lastPut = value;
-  data[1] = (byte)lastPut & 0xff;
+  data[1] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[0] = (byte)lastPut & 0xff;
+  data[0] = lastPut & 0xff;
   return lastPut & 0xff;
 }
 
@@ -159,11 +159,11 @@ char* removeExt(char* path)
  int mput3b(int value, byte* data)
 {
   int lastPut = value;
-  data[2] = (byte)lastPut & 0xff;
+  data[2] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[1] = (byte)lastPut & 0xff;
+  data[1] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[0] = (byte)lastPut & 0xff;
+  data[0] = lastPut & 0xff;
   return lastPut & 0xff;
 }
 
@@ -171,13 +171,13 @@ char* removeExt(char* path)
  int mput4b(int value, byte* data)
 {
   int lastPut = value;
-  data[3] = (byte)lastPut & 0xff;
+  data[3] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[2] = (byte)lastPut & 0xff;
+  data[2] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[1] = (byte)lastPut & 0xff;
+  data[1] = lastPut & 0xff;
   lastPut /= 0x0100;
-  data[0] = (byte)lastPut & 0xff;
+  data[0] = lastPut & 0xff;
   return lastPut & 0xff;
 }
 
