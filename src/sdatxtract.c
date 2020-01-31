@@ -4,6 +4,9 @@
 #include "decoder/nsswav.h"
 #include "decoder/sseq2mid.h"
 
+static bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata);
+static void outputFiles(const char* outputdir_part1, SDAT* sdatfile);
+
 bool extractAudio(const char *filepath) {
 	char titleStr[13], codeStr[5];
 	char output_dir[MAX_PATH + 1];
@@ -64,7 +67,6 @@ bool extractAudio(const char *filepath) {
 }
 
 bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata) {
-	bool sucess = false;
 	char output_dir[MAX_PATH + 1];
 	if (filepath == NULL || ndsdata->ndsfile == NULL) {
 		return false;
@@ -89,8 +91,7 @@ bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata
 			NDS_dumpSDAT(filepath, out, &ndsdata->ndsfile[i]);
 		} else {
 			printf("Processing Sdat %d\n", i);
-			sucess = SDAT_getFiles(filepath, &ndsdata->ndsfile[i], &sdatfile[i]);
-			if (sucess == true) {
+			if (SDAT_getFiles(filepath, &ndsdata->ndsfile[i], &sdatfile[i])) {
 				outputFiles(output_dir, &sdatfile[i]);
 				SDAT_close(&sdatfile[i]);
 			}
@@ -213,7 +214,7 @@ void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
 				continue;
 			}
 
-			for(uint32_t j = 0; j < swar.filenum; j ++) {
+			for(uint32_t j = 0; j < swar.filenum; j++) {
 				SWAV swav;
 				verbose("Swav processed %d\n", j);
 				if(SWAV_genSwav(&swar.file[j], &swav)){
