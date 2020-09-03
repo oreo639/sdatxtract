@@ -4,16 +4,16 @@
 typedef struct {
 	uint8_t *sdatImage;
 	uint32_t sdatsize;
-} NDSfile_t;
+} sdatfile_t;
 
 typedef struct {
-	NDSfile_t *ndsfile;
+	sdatfile_t *sdatfile;
 	uint32_t sdatnum;
-} NDS;
+} nds_t;
 
 bool NDS_isNds(const char* filepath);
 bool NDS_getGameTitle(const char* filepath, char *buf);
 bool NDS_getGameCode(const char* filepath, char *buf);
-bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata);
-bool NDS_dumpSDAT(const char *filepath, const char* fileout, NDSfile_t *ndsfile);
+bool NDS_getSDAToffset(const char* filepath, nds_t *ndsdata);
+bool NDS_dumpSDAT(const char *filepath, const char* fileout, sdatfile_t *ndsfile);
 #endif

@@ -1,6 +1,4 @@
 #  autotools/cmake garbage.
-build
-cmakebuild
 .deps
 .dirstamp
 autom4te.cache
@@ -40,3 +38,7 @@ sdatxtract
 # macOS Garbage
 .DS_Store
 ._*
+
+# build directories
+build
+cmakebuild

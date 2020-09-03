@@ -18,6 +18,13 @@ typedef struct {
 	uint32_t swavsize;
 } SWAV;
 
+enum swar_error {
+	SWARE_OK = 0,
+	SWARE_BAD,
+	SWARE_EMPTY,
+	SWARE_GENERIC
+};
+
 
 int SWAREX_init(SWAR* swarfile, uint8_t *image, uint32_t size);
 

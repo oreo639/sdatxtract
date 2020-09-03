@@ -48,7 +48,7 @@ bool SDAT_getUniqueId(const char *filepath, char *buf) {
 	return true;
 }
 
-bool SDAT_fakeNds(const char *filepath, NDS *ndsdata) {
+bool SDAT_fakeNds(const char *filepath, nds_t *nds) {
 	FILE *fp = fopen(filepath, "rb");
 	long unsigned int size;
 	uint8_t *sdat_data_tmp;
@@ -63,288 +63,273 @@ bool SDAT_fakeNds(const char *filepath, NDS *ndsdata) {
 	sdat_data_tmp = malloc(size);
 	fread(sdat_data_tmp, 1, size, fp);
 
-	if (FILE_getUint(sdat_data_tmp + 0x08) != size) {
+	if (getUint(sdat_data_tmp + 0x08) != size) {
 		printf("Size mismatch detected (file may be corrupted). Continuing.\n");
 	}
 
-	ndsdata->ndsfile = malloc(sizeof(NDSfile_t));
+	nds->sdatfile = malloc(sizeof(sdatfile_t));
 
-	ndsdata->ndsfile[0].sdatImage = FILE_loadFileFromBuff(sdat_data_tmp + 0, FILE_getUint(sdat_data_tmp + 0x08));
-	ndsdata->ndsfile[0].sdatsize = FILE_getUint(sdat_data_tmp + 0x08);
-	verbose("Size:%d\n", ndsdata->ndsfile[0].sdatsize);
-	ndsdata->sdatnum = 1;
+	nds->sdatfile[0].sdatImage = FILE_loadFileFromBuff(sdat_data_tmp + 0, getUint(sdat_data_tmp + 0x08));
+	nds->sdatfile[0].sdatsize = getUint(sdat_data_tmp + 0x08);
+	verbose("Size:%d\n", nds->sdatfile[0].sdatsize);
+	nds->sdatnum = 1;
 	free(sdat_data_tmp);
 	fclose(fp);
 	return true;
 }
 
-void sdatnamefree(SDAT *sdatfile) {
-	/* Clear strings */
-	for (uint32_t i = 0; i < sdatfile->sseqName.numFiles; i++)
-		free(sdatfile->sseqName.name[i]);
+/*void sdatnamefree(sdat_t *nsdat) {
+	for (uint32_t i = 0; i < nsdat->sseqName.numFiles; i++)
+		free(nsdat->sseqName.name[i]);
 
-	for (uint32_t i = 0; i < sdatfile->sbnkName.numFiles; i++)
-		free(sdatfile->sbnkName.name[i]);
+	for (uint32_t i = 0; i < nsdat->sbnkName.numFiles; i++)
+		free(nsdat->sbnkName.name[i]);
 
-	for (uint32_t i = 0; i < sdatfile->swarName.numFiles; i++)
-		free(sdatfile->swarName.name[i]);
+	for (uint32_t i = 0; i < nsdat->swarName.numFiles; i++)
+		free(nsdat->swarName.name[i]);
 
-	for (uint32_t i = 0; i < sdatfile->strmName.numFiles; i++)
-		free(sdatfile->strmName.name[i]);
+	for (uint32_t i = 0; i < nsdat->strmName.numFiles; i++)
+		free(nsdat->strmName.name[i]);
 
-	free(sdatfile->strmName.name);
-	free(sdatfile->swarName.name);
-	free(sdatfile->sbnkName.name);
-	free(sdatfile->sseqName.name);
+	free(nsdat->strmName.name);
+	free(nsdat->swarName.name);
+	free(nsdat->sbnkName.name);
+	free(nsdat->sseqName.name);
 	verbose("Freed text\n");
 
-	free(sdatfile->sseqName.ident);
-	free(sdatfile->sbnkName.ident);
-	free(sdatfile->swarName.ident);
-	free(sdatfile->strmName.ident);
+	free(nsdat->sseqName.ident);
+	free(nsdat->sbnkName.ident);
+	free(nsdat->swarName.ident);
+	free(nsdat->strmName.ident);
 	verbose("Freed ident\n");
 }
 
-void SDAT_close(SDAT *sdatfile)
+void SDAT_close(sdat_t *nsdat)
 {
-	sdatnamefree(sdatfile);
+	sdatnamefree(nsdat);
 
-	free(sdatfile->sseqfile);
-	free(sdatfile->swarfile);
-	free(sdatfile->sbnkfile);
-	free(sdatfile->strmfile);
+	free(nsdat->sseqfile);
+	free(nsdat->swarfile);
+	free(nsdat->sbnkfile);
+	free(nsdat->strmfile);
 	
 	verbose("Freed sdat fat filedata\n");
+}*/
+
+void SDATi_readHeader(fbuffer_t* fbuf, sheader_t* soundheader) {
+	if (!soundheader)
+		return;
+
+	FILE_read(fbuf, soundheader->magic, 4);
+	soundheader->magic[4] = 0;
+	soundheader->endianness = FILE_getU16(fbuf);
+	soundheader->version = FILE_getU16(fbuf);
+	soundheader->filesize = FILE_getU32(fbuf);
+	soundheader->headersize = FILE_getU16(fbuf);
+	soundheader->numblocks = FILE_getU16(fbuf);
 }
 
-bool SDAT_getFiles(const char *filepath, NDSfile_t *ndsfile, SDAT* sdatfile) {
-	uint32_t u32_tmp, sseqSYMBlist = 0, sbnkSYMBlist = 0, swarSYMBlist = 0, strmSYMBlist = 0, INFOoffs, SYMBoffs, FAToffs;
+void SDATi_readSYMBIndex(fbuffer_t* fbuf, symbindex_t* symbi, uint32_t baseOffset) {
+	symbi->numEntries = FILE_getU32(fbuf);
 
-	//printf("OFS:%d\nSIZE:%d\n", ndsfile->sdatoffset, ndsfile->sdatsize);
+	symbi->entryOffsets = malloc(symbi->numEntries*sizeof(uint32_t));
+	FILE_read(fbuf, symbi->entryOffsets, symbi->numEntries*sizeof(uint32_t));
 
-	SYMBoffs = FILE_getUint(ndsfile->sdatImage + 0x10);
+	char temp[32];      //that 32 is totally arbitrary, i should change it
+	symbi->names = malloc(symbi->numEntries*sizeof(char*));
+	for (int i = 0; i < symbi->numEntries; i++)
+	{
+		if (symbi->entryOffsets[i] != 0)
+		{
+			memcpy(temp, (fbuf->data + baseOffset) + symbi->entryOffsets[i], sizeof(temp));
+			symbi->names[i] = strdup(temp);
 
-	INFOoffs = FILE_getUint(ndsfile->sdatImage + 0x18);
-
-	FAToffs = FILE_getUint(ndsfile->sdatImage + 0x20);
-
-	if(SYMBoffs == 0) {
-		printf("[WARN]: SYMB missing! Filenames will not be set.\n");
+			//printf("Read SYMB: %s\n", symbi->entries[i]);
+		} else {
+			symbi->names[i] = NULL;
+		}
 	}
+}
+
+void SDATi_readSYMB(fbuffer_t* fbuf, symb_t* symb) {
+	uint32_t baseOffset = FILE_getOffset(fbuf);
+
+	FILE_read(fbuf, symb->magic, 4);
+	symb->magic[4] = 0;
+	symb->blocksize = FILE_getU32(fbuf);
+	FILE_read(fbuf, symb->indexoffsets, 8*sizeof(uint32_t));
+	FILE_read(fbuf, symb->padding, 24);
+
+	FILE_seek(fbuf, baseOffset+symb->indexoffsets[SDATI_SSEQ]);
+	SDATi_readSYMBIndex(fbuf, &symb->sseq, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+symb->indexoffsets[SDATI_SBNK]);
+	SDATi_readSYMBIndex(fbuf, &symb->sbnk, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+symb->indexoffsets[SDATI_SWAR]);
+	SDATi_readSYMBIndex(fbuf, &symb->swar, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+symb->indexoffsets[SDATI_STRM]);
+	SDATi_readSYMBIndex(fbuf, &symb->strm, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+symb->blocksize);
+}
+
+void SDATi_readINFOIndex(fbuffer_t* fbuf, infoindex_t* infoi) {
+	infoi->numEntries = FILE_getU32(fbuf);
+
+	infoi->entryOffsets = malloc(infoi->numEntries*sizeof(uint32_t));
+	FILE_read(fbuf, infoi->entryOffsets, infoi->numEntries*sizeof(uint32_t));
+}
+
+void SDATi_readSseqINFO(fbuffer_t* fbuf, sseqinfoindex_t* sseqi, uint32_t baseOffset) {
+	SDATi_readINFOIndex(fbuf, &sseqi->index);
+
+	sseqi->entries = malloc(sseqi->index.numEntries*sizeof(sseqinfo_t));
+	for (int i = 0; i < sseqi->index.numEntries; i++)
+	{
+		if (sseqi->index.entryOffsets[i] != 0)
+		{
+			memcpy(&sseqi->entries[i], (fbuf->data + baseOffset) + sseqi->index.entryOffsets[i], sizeof(sseqinfo_t));
+		} else {
+			sseqi->entries[i].fileId = (uint16_t) -1;
+		}
+	}
+}
+
+void SDATi_readSbnkINFO(fbuffer_t* fbuf, sbnkinfoindex_t* sbnki, uint32_t baseOffset) {
+	SDATi_readINFOIndex(fbuf, &sbnki->index);
+
+	sbnki->entries = malloc(sbnki->index.numEntries*sizeof(sbnkinfo_t));
+	for (int i = 0; i < sbnki->index.numEntries; i++)
+	{
+		if (sbnki->index.entryOffsets[i] != 0)
+		{
+			memcpy(&sbnki->entries[i], (fbuf->data + baseOffset) + sbnki->index.entryOffsets[i], sizeof(sbnkinfo_t));
+		}  else {
+			sbnki->entries[i].fileId = (uint16_t) -1;
+		}
+	}
+}
+
+void SDATi_readSwarINFO(fbuffer_t* fbuf, swarinfoindex_t* swari, uint32_t baseOffset) {
+	SDATi_readINFOIndex(fbuf, &swari->index);
+
+	swari->entries = malloc(swari->index.numEntries*sizeof(swarinfo_t));
+	for (int i = 0; i < swari->index.numEntries; i++)
+	{
+		if (swari->index.entryOffsets[i] != 0)
+		{
+			memcpy(&swari->entries[i], (fbuf->data + baseOffset) + swari->index.entryOffsets[i], sizeof(sseqinfo_t));
+		}  else {
+			swari->entries[i].fileId = (uint16_t) -1;
+		}
+	}
+}
+
+void SDATi_readStrmINFO(fbuffer_t* fbuf, strminfoindex_t* strmi, uint32_t baseOffset) {
+	SDATi_readINFOIndex(fbuf, &strmi->index);
+
+	strmi->entries = malloc(strmi->index.numEntries*sizeof(strminfo_t));
+	for (int i = 0; i < strmi->index.numEntries; i++)
+	{
+		if (strmi->index.entryOffsets[i] != 0)
+		{
+			memcpy(&strmi->entries[i], (fbuf->data + baseOffset) + strmi->index.entryOffsets[i], sizeof(strminfo_t));
+		}  else {
+			strmi->entries[i].fileId = (uint16_t) -1;
+		}
+	}
+}
+
+void SDATi_readINFO(fbuffer_t* fbuf, info_t* sinfo) {
+	uint32_t baseOffset = FILE_getOffset(fbuf);
+
+	FILE_read(fbuf, sinfo->magic, 4);
+	sinfo->magic[4] = 0;
+	sinfo->blocksize = FILE_getU32(fbuf);
+	FILE_read(fbuf, sinfo->infoOffsets, 8*sizeof(uint32_t));
+	FILE_read(fbuf, sinfo->padding, 24);
+
+	FILE_seek(fbuf, baseOffset+sinfo->infoOffsets[SDATI_SSEQ]);
+	SDATi_readSseqINFO(fbuf, &sinfo->sseq, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+sinfo->infoOffsets[SDATI_SBNK]);
+	SDATi_readSbnkINFO(fbuf, &sinfo->sbnk, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+sinfo->infoOffsets[SDATI_SWAR]);
+	SDATi_readSwarINFO(fbuf, &sinfo->swar, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+sinfo->infoOffsets[SDATI_STRM]);
+	SDATi_readStrmINFO(fbuf, &sinfo->strm, baseOffset);
+
+	FILE_seek(fbuf, baseOffset+sinfo->blocksize);
+}
+
+void SDATi_readFAT(fbuffer_t* fbuf, fat_t* sfat) {
+	uint32_t baseOffset = FILE_getOffset(fbuf);
+
+	FILE_read(fbuf, sfat->magic, 4);
+	sfat->magic[4] = 0;
+	sfat->blocksize = FILE_getU32(fbuf);
+	sfat->numEntries = FILE_getU32(fbuf);
+
+	DEBUG("%d\n", sfat->numEntries);
+
+	sfat->entries = malloc(sfat->numEntries*sizeof(fatentry_t));
+	for (int i = 0; i < sfat->numEntries; i++) {
+		sfat->entries[i].offset = FILE_getU32(fbuf);
+		sfat->entries[i].size   = FILE_getU32(fbuf);
+		FILE_read(fbuf, sfat->entries[i].padding, 8);
+
+		sfat->entries[i].file = (fbuf->data + sfat->entries[i].offset);
+	}
+
+	FILE_seek(fbuf, baseOffset+sfat->blocksize);
+}
+
+bool SDAT_getFiles(const char *filepath, sdatfile_t *sdatfile, sdat_t* nsdat) {
+	uint32_t u32_tmp, sseqSYMBlist = 0, sbnkSYMBlist = 0, swarSYMBlist = 0, strmSYMBlist = 0;
+	uint32_t INFOoffs, INFOlen, SYMBoffs, SYMBlen, FAToffs, FATlen;
+	sheader_t soundheader;
+
+	//printf("OFS:%d\nSIZE:%d\n", sdatfile->sdatoffset, sdatfile->sdatsize);
+
+	fbuffer_t fbuf = FILE_createFbfFromBuff(sdatfile->sdatImage, sdatfile->sdatsize);
+	fbuffer_t *fp = &fbuf;
+
+	SDATi_readHeader(&fbuf, &soundheader);
+	SYMBoffs = FILE_getU32(fp);
+	SYMBlen  = FILE_getU32(fp);
+	INFOoffs = FILE_getU32(fp);
+	INFOlen  = FILE_getU32(fp);
+	FAToffs  = FILE_getU32(fp);
+	FATlen   = FILE_getU32(fp);
+	FILE_getU16(fp); //padding
 
 	if(INFOoffs == 0) {
 		printf("Info not found. Cannot continue.\n");
-		free(ndsfile->sdatImage);
 		return false;
 	}
 
 	if(FAToffs == 0) {
 		printf("FAT not found. Cannot continue.\n");
-		free(ndsfile->sdatImage);
 		return false;
 	}
 
-	uint32_t sseqsNum = FILE_getUint((ndsfile->sdatImage + INFOoffs) + FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x08));
-
-	uint32_t sbnksNum = FILE_getUint((ndsfile->sdatImage + INFOoffs) + FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x10));
-
-	uint32_t swarsNum = FILE_getUint((ndsfile->sdatImage + INFOoffs) + FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x14));
-
-	uint32_t strmsNum = FILE_getUint((ndsfile->sdatImage + INFOoffs) + FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x24));
-
-	verbose("sseqsNum:%d\n", sseqsNum);
-	verbose("sbnksNum:%d\n", sbnksNum);
-	verbose("swarsNum:%d\n", swarsNum);
-	verbose("strmsNum:%d\n", strmsNum);
-
-	if (SYMBoffs != 0) {
-		/*Sequence symbol List*/
-		sseqSYMBlist = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + 0x08);
-
-		/* Bank symbol list*/
-		sbnkSYMBlist = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + 0x10);
-
-		/*Wav Arcive symbol list*/
-		swarSYMBlist = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + 0x14);
-
-		/*Stream symbol list*/
-		strmSYMBlist = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + 0x24);
+	if(SYMBoffs != 0 || SYMBlen != 0) {
+		FILE_seek(&fbuf, SYMBoffs);
+		SDATi_readSYMB(&fbuf, &nsdat->symb);
+	} else {
+		memset(&nsdat->symb, 0, sizeof(symb_t));
+		printf("[WARN]: SYMB missing! Filenames will not be set.\n");
 	}
 
-	sdatfile->sseqName.name = malloc((sseqsNum + 1) * sizeof(char*));
-	sdatfile->sbnkName.name = malloc((sbnksNum + 1) * sizeof(char*));
-	sdatfile->swarName.name = malloc((swarsNum + 1) * sizeof(char*));
-	sdatfile->strmName.name = malloc((strmsNum + 1) * sizeof(char*));
+	FILE_seek(&fbuf, INFOoffs);
+	SDATi_readINFO(&fbuf, &nsdat->info);
 
-	for (uint32_t i = 0; i < sseqsNum; i++) {
-		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && sseqSYMBlist != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + (sseqSYMBlist + 4 + i * 4));
-			if (u32_tmp != 0) {
-				memcpy(&temp, (ndsfile->sdatImage + SYMBoffs) + u32_tmp, 32);
-			} else {
-				snprintf(temp, 32, "SSEQ_%04d", i);
-			}
-		}
-		else {
-			snprintf(temp, 32, "SSEQ_%04d", i);
-		}
-		sdatfile->sseqName.name[i] = strdup(temp);
-	}
+	FILE_seek(&fbuf, FAToffs);
+	SDATi_readFAT(&fbuf, &nsdat->fat);
 
-	for (uint32_t i = 0; i < sbnksNum; i++) {
-		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && sbnkSYMBlist != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + (sbnkSYMBlist + 4 + i * 4));
-			if (u32_tmp != 0) {
-				memcpy(&temp, (ndsfile->sdatImage + SYMBoffs) + u32_tmp, 32);
-			} else {
-				snprintf(temp, 32, "SBNK_%04d", i);
-			}
-		}
-		else {
-			snprintf(temp, 32, "SBNK_%04d", i);
-		}
-		sdatfile->sbnkName.name[i] = strdup(temp);
-	}
-
-	for (uint32_t i = 0; i < swarsNum; i++) {
-		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && swarSYMBlist != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + (swarSYMBlist + 4 + i * 4));
-			if (u32_tmp != 0) {
-				memcpy(&temp, (ndsfile->sdatImage + SYMBoffs) + u32_tmp, 32);
-			} else {
-				snprintf(temp, 32, "SWAR_%04d", i);
-			}
-		}
-		else {
-			snprintf(temp, 32, "SWAR_%04d", i);
-		}
-		sdatfile->swarName.name[i] = strdup(temp);
-	}
-
-	for (uint32_t i = 0; i < strmsNum; i++) {
-		char temp[32];        //that 32 is totally arbitrary, i should change it
-		if (SYMBoffs != 0 && strmSYMBlist != 0 && bUseFname == true) {
-			u32_tmp = FILE_getUint((ndsfile->sdatImage + SYMBoffs) + (strmSYMBlist + 4 + i * 4));
-			if (u32_tmp != 0) {
-				memcpy(&temp, (ndsfile->sdatImage + SYMBoffs) + u32_tmp, 32);
-			} else {
-				snprintf(temp, 32, "STRM_%04d", i);
-			}
-		}
-		else {
-			snprintf(temp, 32, "STRM_%04d", i);
-		}
-		sdatfile->strmName.name[i] = strdup(temp);
-	}
-
-	sdatfile->sseqName.numFiles = sseqsNum;
-	sdatfile->sbnkName.numFiles = sbnksNum;
-	sdatfile->swarName.numFiles = swarsNum;
-	sdatfile->strmName.numFiles = strmsNum;
-
-	/*Get fileid's*/
-	uint32_t pSeqInfoPtrList = FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x08);
-	//uint32_t seqInfoPtrListLength = FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x12);
-	uint32_t nSeqInfos = FILE_getUint((ndsfile->sdatImage + INFOoffs) + pSeqInfoPtrList);
-	sdatfile->sseqName.ident = malloc((nSeqInfos + 1) * sizeof(uint16_t*));
-
-	for (uint32_t i = 0; i < nSeqInfos; i++) {
-		uint32_t pSeqInfo = FILE_getUint((ndsfile->sdatImage + INFOoffs) + (pSeqInfoPtrList + 4 + i * 4));
-		if (pSeqInfo == 0)
-			sdatfile->sseqName.ident[i] = (uint16_t) -1;
-		else
-			sdatfile->sseqName.ident[i] = FILE_getShort((ndsfile->sdatImage + INFOoffs) + pSeqInfo);
-		sdatfile->sseqName.banks = FILE_getShort((ndsfile->sdatImage + INFOoffs) + pSeqInfo);
-		//next bytes would be vol, cpr, ppr, and ply respectively, whatever the heck those last 3 stand for
-	}
-
-	uint32_t pBnkInfoPtrList = FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x10);
-	uint32_t nBnkInfos = FILE_getUint((ndsfile->sdatImage + INFOoffs) + pBnkInfoPtrList);
-	sdatfile->sbnkName.ident = malloc((nBnkInfos + 1) * sizeof(uint16_t));
-
-	for (uint32_t i = 0; i < nBnkInfos; i++) {
-		uint32_t pBnkInfo = FILE_getUint((ndsfile->sdatImage + INFOoffs) + (pBnkInfoPtrList + 4 + i * 4));
-		if (pBnkInfo == 0)
-			sdatfile->sbnkName.ident[i] = (uint16_t) -1;
-		else
-			sdatfile->sbnkName.ident[i] = FILE_getShort((ndsfile->sdatImage + INFOoffs) + pBnkInfo);
-	}
-
-	uint32_t pWAInfoList = FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x14);
-	uint32_t nWAInfos = FILE_getUint((ndsfile->sdatImage + INFOoffs) + pWAInfoList);
-	sdatfile->swarName.ident = malloc((nWAInfos + 1) * sizeof(uint16_t));
-
-	for (uint32_t i = 0; i < nWAInfos; i++) {
-		uint32_t pWAInfo = FILE_getUint((ndsfile->sdatImage + INFOoffs) + (pWAInfoList + 4 + i * 4));
-		if (pWAInfo == 0)
-			sdatfile->swarName.ident[i] = (uint16_t) -1;
-		else
-			sdatfile->swarName.ident[i] = FILE_getShort((ndsfile->sdatImage + INFOoffs) + pWAInfo);
-	}
-
-	uint32_t pStrmInfoList = FILE_getUint((ndsfile->sdatImage + INFOoffs) + 0x24);
-	uint32_t nStrmInfos = FILE_getUint((ndsfile->sdatImage + INFOoffs) + pStrmInfoList);
-	sdatfile->strmName.ident = malloc((nStrmInfos + 1) * sizeof(uint16_t));
-
-	for (uint32_t i = 0; i < nStrmInfos; i++) {
-		uint32_t nStrmInfo = FILE_getUint((ndsfile->sdatImage + INFOoffs) + (pStrmInfoList + 4 + i * 4));
-		if (nStrmInfo == 0)
-			sdatfile->strmName.ident[i] = (uint16_t) -1;
-		else
-			sdatfile->strmName.ident[i] = FILE_getShort((ndsfile->sdatImage + INFOoffs) + nStrmInfo);
-	}
-
-	sdatfile->files = FILE_getUint((ndsfile->sdatImage + FAToffs) + 0x08);
-	sdatfile->sseqfile = malloc(sizeof(SDAT_FILE) * sdatfile->sseqName.numFiles);
-	sdatfile->swarfile = malloc(sizeof(SDAT_FILE) * sdatfile->swarName.numFiles);
-	sdatfile->sbnkfile = malloc(sizeof(SDAT_FILE) * sdatfile->sbnkName.numFiles);
-	sdatfile->strmfile = malloc(sizeof(SDAT_FILE) * sdatfile->strmName.numFiles);
-
-	for(uint32_t i = 0; i < sdatfile->sseqName.numFiles; i++){
-		if (sdatfile->sseqName.ident[i] == (uint16_t) -1) {
-			sdatfile->sseqfile[i].filesize = 0;
-			continue;
-			}
-		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->sseqName.ident[i] * 0x10);
-		sdatfile->sseqfile[i].fileoffset = FILE_getUint((ndsfile->sdatImage + current_pos));
-		sdatfile->sseqfile[i].filesize = FILE_getUint((ndsfile->sdatImage + current_pos) + 0x04);
-		sdatfile->sseqfile[i].file = (ndsfile->sdatImage + sdatfile->sseqfile[i].fileoffset);
-	}
-
-	for(uint32_t i = 0; i < sdatfile->swarName.numFiles; i++){
-		if (sdatfile->swarName.ident[i] == (uint16_t) -1) {
-			sdatfile->swarfile[i].filesize = 0;
-			continue;
-			}
-		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->swarName.ident[i] * 0x10);
-		sdatfile->swarfile[i].fileoffset = FILE_getUint((ndsfile->sdatImage + current_pos));
-		sdatfile->swarfile[i].filesize = FILE_getUint((ndsfile->sdatImage + current_pos) + 0x04);
-		sdatfile->swarfile[i].file = (ndsfile->sdatImage + sdatfile->swarfile[i].fileoffset);
-	} 
-
-	for(uint32_t i = 0; i < sdatfile->sbnkName.numFiles; i++){
-		if (sdatfile->sbnkName.ident[i] == (uint16_t) -1) {
-			sdatfile->sbnkfile[i].filesize = 0;
-			continue;
-			}
-		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->sbnkName.ident[i] * 0x10);
-		sdatfile->sbnkfile[i].fileoffset = FILE_getUint((ndsfile->sdatImage + current_pos));
-		sdatfile->sbnkfile[i].filesize = FILE_getUint((ndsfile->sdatImage + current_pos) + 0x04);
-		sdatfile->sbnkfile[i].file = (ndsfile->sdatImage + sdatfile->sbnkfile[i].fileoffset);
-	}
-
-	for(uint32_t i = 0; i < sdatfile->strmName.numFiles; i++){
-		if (sdatfile->strmName.ident[i] == (uint16_t) -1) {
-			sdatfile->strmfile[i].filesize = 0;
-			continue;
-			}
-		uint32_t current_pos = FAToffs + (uint32_t)(12 + sdatfile->strmName.ident[i] * 0x10);
-		sdatfile->strmfile[i].fileoffset = FILE_getUint((ndsfile->sdatImage + current_pos));
-		sdatfile->strmfile[i].filesize = FILE_getUint((ndsfile->sdatImage + current_pos) + 0x04);
-		sdatfile->strmfile[i].file = (ndsfile->sdatImage + sdatfile->strmfile[i].fileoffset);
-	}
 	return true;
 }

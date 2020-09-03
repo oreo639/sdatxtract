@@ -6,7 +6,7 @@ int SWAREX_init(SWAR* swar, uint8_t *image, uint32_t size) {
 		swar->swarsize = size;
 		swar->swarimage = image;
 
-		swar->filenum = FILE_getUint(swar->swarimage + 0x38);
+		swar->filenum = getUint(swar->swarimage + 0x38);
 		swar->file = malloc(sizeof(SWARfile_t) * swar->filenum);
 
 		uint8_t* current_pos = swar->swarimage + 0x3C;
@@ -14,17 +14,17 @@ int SWAREX_init(SWAR* swar, uint8_t *image, uint32_t size) {
 		{
 			uint32_t i;
 			for(i = 0; i < swar->filenum - 1; i ++){
-				swar->file[i].fileimage = swar->swarimage + FILE_getUint(current_pos);
-				swar->file[i].filesize = FILE_getUint(current_pos + 0x04) - FILE_getUint(current_pos);
+				swar->file[i].fileimage = swar->swarimage + getUint(current_pos);
+				swar->file[i].filesize = getUint(current_pos + 0x04) - getUint(current_pos);
 				current_pos += 0x04;
 			}
-			swar->file[i].fileimage = swar->swarimage + FILE_getUint(current_pos);
-			swar->file[i].filesize = swar->swarsize - FILE_getUint(current_pos);
-			return 0;
+			swar->file[i].fileimage = swar->swarimage + getUint(current_pos);
+			swar->file[i].filesize = swar->swarsize - getUint(current_pos);
+			return SWARE_OK;
 		}
-		return 2;
+		return SWARE_EMPTY;
 	}
-	return 1;
+	return SWARE_BAD;
 }
 
 void SWAREX_exit(SWAR* swar) {

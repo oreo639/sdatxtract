@@ -81,7 +81,7 @@ bool NDS_getGameCode(const char* filepath, char *buf){
 	return true;
 }
 
-bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata) {
+bool NDS_getSDAToffset(const char* filepath, nds_t *ndsdata) {
 	FILE *fp = fopen(filepath, "rb");
 	long unsigned int size;
 	uint8_t *nds_data_tmp;
@@ -101,20 +101,20 @@ bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata) {
 	fseek(fp, 0, SEEK_SET);
 	ndsdata->sdatnum = 0;
 
-	ndsdata->ndsfile = malloc(sizeof(NDSfile_t));
+	ndsdata->sdatfile = malloc(sizeof(sdatfile_t));
 
 	fread(nds_data_tmp, 1, size, fp);
 	for (uint32_t i = 0; i + 4 < size; i++) {
 		if(!memcmp((nds_data_tmp + i), sdatMagic, sizeof(sdatMagic))) {
 			verbose("SDAT found!\n");
-			if ((FILE_getShort((nds_data_tmp + i) + 0xC) < 0x100) && (FILE_getUint((nds_data_tmp + i) + 0x10) < 0x10000)) {
+			if ((getShort((nds_data_tmp + i) + 0xC) < 0x100) && (getUint((nds_data_tmp + i) + 0x10) < 0x10000)) {
 				verbose("SDAT confirmed!\n");
 				verbose("Reading sdat %d.\n", ndsdata->sdatnum);
-				ndsdata->ndsfile = realloc(ndsdata->ndsfile, (ndsdata->sdatnum+0x01) * sizeof(NDSfile_t));
-				ndsdata->ndsfile[ndsdata->sdatnum].sdatImage = FILE_loadFileFromBuff(nds_data_tmp + i,
-					FILE_getUint(nds_data_tmp + i + 0x08));
-				ndsdata->ndsfile[ndsdata->sdatnum].sdatsize = FILE_getUint(nds_data_tmp + i + 0x08);
-				verbose("Sdat offset:%d\nSdat Size:%d\n", i, ndsdata->ndsfile[ndsdata->sdatnum].sdatsize);
+				ndsdata->sdatfile = realloc(ndsdata->sdatfile, (ndsdata->sdatnum+0x01) * sizeof(sdatfile_t));
+				ndsdata->sdatfile[ndsdata->sdatnum].sdatImage = FILE_loadFileFromBuff(nds_data_tmp + i,
+					getUint(nds_data_tmp + i + 0x08));
+				ndsdata->sdatfile[ndsdata->sdatnum].sdatsize = getUint(nds_data_tmp + i + 0x08);
+				verbose("Sdat offset:%d\nSdat Size:%d\n", i, ndsdata->sdatfile[ndsdata->sdatnum].sdatsize);
 				ndsdata->sdatnum++;
 			}
 			else {
@@ -132,9 +132,9 @@ bool NDS_getSDAToffset(const char* filepath, NDS *ndsdata) {
 	return true;
 }
 
-bool NDS_dumpSDAT(const char *filepath, const char* fileout, NDSfile_t *ndsfile) {
+bool NDS_dumpSDAT(const char *filepath, const char* fileout, sdatfile_t *sdatfile) {
 	FILE *fpout = fopen(fileout, "wb");
-	fwrite(ndsfile->sdatImage, 1, ndsfile->sdatsize, fpout);
+	fwrite(sdatfile->sdatImage, 1, sdatfile->sdatsize, fpout);
 	fclose(fpout);
 	return true;
 }

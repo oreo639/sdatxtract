@@ -4,8 +4,8 @@
 #include "decoder/nsswav.h"
 #include "decoder/sseq2mid.h"
 
-static bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata);
-static void outputFiles(const char* outputdir_part1, SDAT* sdatfile);
+static bool SDATxtract(const char* filepath, nds_t *ndsdata);
+static void outputFiles(sdat_t* sdat);
 
 bool extractAudio(const char *filepath) {
 	char titleStr[13], codeStr[5];
@@ -18,7 +18,7 @@ bool extractAudio(const char *filepath) {
 	verbose("bUseFname:%d\n", bUseFname);
 	verbose("======================\n");
 
-	NDS ndsdata;
+	nds_t ndsdata;
 
 	if (SDAT_isSDAT(filepath)) {
 		snprintf(titleStr, 13, "SDAT");
@@ -55,91 +55,109 @@ bool extractAudio(const char *filepath) {
 	snprintf(output_dir, MAX_PATH, "%s_%s", titleStr, codeStr);
 	verbose("Outputing to directory: %s\n", output_dir);
 	FILE_mkdir(output_dir);
+	FILE_chdir(output_dir);
 
-	if (!SDATxtract(filepath, output_dir, &ndsdata)) {
+	if (!SDATxtract(filepath, &ndsdata)) {
 		printf("SDAT extraction failed.\n");
 	} else {
 		printf("SDAT processing complete.\n");
 	}
 
-	free(ndsdata.ndsfile);
+	free(ndsdata.sdatfile);
+	FILE_chdir("..");
+
 	return true;
 }
 
-bool SDATxtract(const char* filepath,  const char* outputdir_part1, NDS *ndsdata) {
-	char output_dir[MAX_PATH + 1];
-	if (filepath == NULL || ndsdata->ndsfile == NULL) {
+bool SDATxtract(const char* filepath, nds_t *ndsdata) {
+	char output_dir[5];
+	if (filepath == NULL || ndsdata->sdatfile == NULL) {
 		return false;
 	}
 
-	SDAT *sdatfile;
-	sdatfile = malloc(ndsdata->sdatnum*sizeof(SDAT));
+	sdat_t *sdat;
+	sdat = malloc(ndsdata->sdatnum*sizeof(sdat_t));
 
 	for (int i = 0; i < ndsdata->sdatnum; i++) {
 		if(ndsdata->sdatnum > 1) {
-			snprintf(output_dir, MAX_PATH, "%s/%d", outputdir_part1, i);
-		} else {
-			snprintf(output_dir, MAX_PATH, "%s", outputdir_part1);
+			snprintf(output_dir, sizeof(output_dir), "%d", i);
+			FILE_mkdir(output_dir);
+			FILE_chdir(output_dir);
 		}
-
-		FILE_mkdir(output_dir);
 
 		if (bExtractSdat) {
-			char out[MAX_PATH + 1];
-			snprintf(out, MAX_PATH, "%s/sound_data_%04d.sdat", outputdir_part1, i);
+			char out[22];
+			snprintf(out, MAX_PATH, "sound_data_%04d.sdat", i);
 			printf("Dump Sdat %d\n", i);
-			NDS_dumpSDAT(filepath, out, &ndsdata->ndsfile[i]);
+			NDS_dumpSDAT(filepath, out, &ndsdata->sdatfile[i]);
 		} else {
 			printf("Processing Sdat %d\n", i);
-			if (SDAT_getFiles(filepath, &ndsdata->ndsfile[i], &sdatfile[i])) {
-				outputFiles(output_dir, &sdatfile[i]);
-				SDAT_close(&sdatfile[i]);
+			if (SDAT_getFiles(filepath, &ndsdata->sdatfile[i], &sdat[i])) {
+				outputFiles(&sdat[i]);
+				//SDAT_close(&sdat[i]);
 			}
 		}
-		free(ndsdata->ndsfile[i].sdatImage);
+
+		if(ndsdata->sdatnum > 1) {
+			FILE_chdir("..");
+		}
+
+		free(ndsdata->sdatfile[i].sdatImage);
 	}
-	free(sdatfile);
+	free(sdat);
 	return true;
 }
 
-void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
-	char outputfile[MAX_PATH + 1], outputsseq[MAX_PATH - 34], outputsbnk[MAX_PATH - 34], outputstrm[MAX_PATH - 34], outputswar[MAX_PATH - 34];
+void outputFiles(sdat_t* nsdat) {
+	char outputfile[MAX_PATH + 1];
 	NSSwav *nsswav = NULL;
 	NSStrm *nsstrm = NULL;
 	Sseq2mid *nssseq = NULL;
 	int numSSEQ = 0, numSTRM = 0, numSWAR = 0, numSBNK = 0;
+	char tempfname[32];
 
-	snprintf(outputsseq, MAX_PATH-35, "%s/%s", outputdir_part1, DIR_SSEQ);
-	snprintf(outputsbnk, MAX_PATH-35, "%s/%s", outputdir_part1, DIR_SBNK);
-	snprintf(outputstrm, MAX_PATH-35, "%s/%s", outputdir_part1, DIR_STRM);
-	snprintf(outputswar, MAX_PATH-35, "%s/%s", outputdir_part1, DIR_SWAR);
-	FILE_mkdir(outputsseq);
-	FILE_mkdir(outputsbnk);
-	FILE_mkdir(outputstrm);
-	FILE_mkdir(outputswar);
+	FILE_mkdir(DIR_SSEQ);
+	FILE_mkdir(DIR_SBNK);
+	FILE_mkdir(DIR_STRM);
+	FILE_mkdir(DIR_SWAR);
 
-	for (uint32_t i = 0; i < sdatfile->sseqName.numFiles; i++) {
-		if (sdatfile->sseqfile[i].filesize == 0)
+	FILE_chdir(DIR_SSEQ);
+	printf("Extracting SSEQ:\n");
+	for (uint32_t i = 0; i < nsdat->info.sseq.index.numEntries; i++) {
+		if (nsdat->info.sseq.entries[i].fileId == (uint16_t)-1)
 			continue;
 
+		fatentry_t *entry = &nsdat->fat.entries[nsdat->info.sseq.entries[i].fileId];
+		char* filename = NULL;
+
+		if (bUseFname)
+			if (nsdat->symb.sseq.numEntries > i)
+				filename = nsdat->symb.sseq.names[i];
+
+		if (!filename) {
+			snprintf(tempfname, sizeof(tempfname), "SSEQ_%04d", i);
+			filename = tempfname;
+		}
+
 		verbose("Prossessing Sseq #%d:  ", i);
-		verbose("File %s\n", sdatfile->sseqName.name[i]);
+		verbose("File %s\n", filename);
+		processIndicator();
 
 		if(bDecodeFile){
-			snprintf(outputfile, MAX_PATH, "%s/%s.mid", outputsseq, sdatfile->sseqName.name[i]);
-			nssseq = sseq2midCreate(sdatfile->sseqfile[i].file, sdatfile->sseqfile[i].filesize, false);
+			snprintf(outputfile, MAX_PATH, "%s.mid", filename);
+			nssseq = sseq2midCreate(entry->file, entry->size, false);
 			if(!nssseq){
 				printf("SSEQ open error.\n");
 				continue;
 			}
 			sseq2midSetLoopCount(nssseq, 1);
 			sseq2midNoReverb(nssseq, false);
-			if(!sseq2midConvert(nssseq)){
+			if(!sseq2midConvert(nssseq)) {
 				printf("SSEQ convert error.\n");
 				sseq2midDelete(nssseq);
 				continue;
 			}
-			if(!sseq2midWriteMidiFile(nssseq, outputfile)){
+			if(!sseq2midWriteMidiFile(nssseq, outputfile)) {
 				printf("MIDI write error.\n");
 				sseq2midDelete(nssseq);
 				continue;
@@ -148,66 +166,46 @@ void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
 			sseq2midDelete(nssseq);
 		} else {
 			//determine filename
-			snprintf(outputfile, MAX_PATH, "%s/%s.sseq", outputsseq, sdatfile->sseqName.name[i]);
-			FILE_outPutFileFromBuff(outputfile, sdatfile->sseqfile[i].file, sdatfile->sseqfile[i].filesize);
+			snprintf(outputfile, MAX_PATH, "%s.sseq", filename);
+			FILE_outPutFileFromBuff(outputfile, entry->file, entry->size);
 			numSSEQ++;
 		}
 	}
+	printf("\n");
+	FILE_chdir("..");
 
-	for (uint32_t i = 0; i < sdatfile->sbnkName.numFiles; i++) {
-		if (sdatfile->sbnkfile[i].filesize == 0)
+	FILE_chdir(DIR_SWAR);
+	printf("Extracting SWAR:\n");
+	for (uint32_t i = 0; i < nsdat->info.swar.index.numEntries; i++) {
+		if (nsdat->info.swar.entries[i].fileId == (uint16_t)-1)
 			continue;
 
-		verbose("Prossessing Sbnk #%d:   ", i);
-		verbose("File %s\n", sdatfile->sbnkName.name[i]);
+		fatentry_t *entry = &nsdat->fat.entries[nsdat->info.swar.entries[i].fileId];
+		char* filename = NULL;
 
-		//determine filename
-		snprintf(outputfile, MAX_PATH, "%s/%s.sbnk", outputsbnk, sdatfile->sbnkName.name[i]);
-		FILE_outPutFileFromBuff(outputfile, sdatfile->sbnkfile[i].file, sdatfile->sbnkfile[i].filesize);
-		numSBNK++;
-	}
+		if (bUseFname)
+			if (nsdat->symb.sseq.numEntries > i)
+				filename = nsdat->symb.sseq.names[i];
 
-	for (uint32_t i = 0; i < sdatfile->strmName.numFiles; i++) {
-		if (sdatfile->strmfile[i].filesize == 0)
-			continue;
-
-		verbose("Prossessing Strm #%d:    ", i);
-		verbose("File %s\n", sdatfile->strmName.name[i]);
-
-		if(bDecodeFile){
-			snprintf(outputfile, MAX_PATH, "%s/%s.wav", outputstrm, sdatfile->strmName.name[i]);
-			//STRM open
-			nsstrm = nsStrmCreate(sdatfile->strmfile[i].file, sdatfile->strmfile[i].filesize);
-			if (!nsstrm) {
-				printf("STRM open error.\n");
-				continue;
-			}
-			if(!nsStrmWriteToWaveFile(nsstrm, outputfile)) {
-				printf("WAVE write error.\n");
-				nsStrmDelete(nsstrm);
-				continue;
-			}
-			else numSTRM++;
-			nsStrmDelete(nsstrm);
-		} else {
-			snprintf(outputfile, MAX_PATH, "%s/%s.strm", outputstrm, sdatfile->strmName.name[i]);
-			FILE_outPutFileFromBuff(outputfile, sdatfile->strmfile[i].file, sdatfile->strmfile[i].filesize);
-			numSTRM++;
+		if (!filename) {
+			snprintf(tempfname, sizeof(tempfname), "SWAR_%04d", i);
+			filename = tempfname;
 		}
-	}
 
-	for (uint32_t i = 0; i < sdatfile->swarName.numFiles; i++) {
-		if (sdatfile->swarfile[i].filesize == 0)
-			continue;
 		verbose("Prossessing Swar #%d:    ", i);
-		verbose("File %s\n", sdatfile->swarName.name[i]);
+		verbose("File %s\n", filename);
+		processIndicator();
+
 		if(bDecodeFile || bGetSwav){
+			FILE_mkdir(filename);
+			FILE_chdir(filename);
+
 			SWAR swar;
 			int ret = 0;
-			if((ret = SWAREX_init(&swar, sdatfile->swarfile[i].file, sdatfile->swarfile[i].filesize))) {
-				if (ret == 1)
+			if((ret = SWAREX_init(&swar, entry->file, entry->size))) {
+				if (ret == SWARE_BAD)
 					printf("SWAR open error: Did not pass validation.\nMay be corrupted?\n");
-				if (ret == 2)
+				if (ret == SWARE_EMPTY)
 					printf("SWAR open error: No files found to extract.\n");
 
 				SWAREX_exit(&swar);
@@ -223,7 +221,7 @@ void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
 					continue;
 				}
 				if (bDecodeFile) {
-					snprintf(outputfile, MAX_PATH, "%s/%s_%.4d.wav", outputswar, sdatfile->swarName.name[i], j);
+					snprintf(outputfile, MAX_PATH, "%.4d.wav", j);
 					nsswav = nsSwavCreate(swav.swavimage, swav.swavsize);
 					if(!nsswav){
 						printf("SWAV open error.\n");
@@ -239,23 +237,102 @@ void outputFiles(const char* outputdir_part1, SDAT* sdatfile) {
 					}
 					nsSwavDelete(nsswav);
 				} else {
-					snprintf(outputfile, MAX_PATH, "%s/%s_%.4d.swav", outputswar, sdatfile->swarName.name[i], j);
+					snprintf(outputfile, MAX_PATH, "%.4d.swav", j);
 					FILE_outPutFileFromBuff(outputfile, swav.swavimage, swav.swavsize);
 				}
 				numSWAR++;
 				SWAV_clear(&swav);
 			}
 			SWAREX_exit(&swar);
+			FILE_chdir("..");
 		} else {
-			snprintf(outputfile, MAX_PATH, "%s/%s.swar", outputswar, sdatfile->swarName.name[i]);
-			FILE_outPutFileFromBuff(outputfile, sdatfile->swarfile[i].file, sdatfile->swarfile[i].filesize);
+			snprintf(outputfile, MAX_PATH, "%s.swar", filename);
+			FILE_outPutFileFromBuff(outputfile, entry->file, entry->size);
 			numSWAR++;
 		}
 	}
+	printf("\n");
+	FILE_chdir("..");
+
+	FILE_chdir(DIR_SBNK);
+	printf("Extracting SBNK:\n");
+	for (uint32_t i = 0; i < nsdat->info.sbnk.index.numEntries; i++) {
+		if (nsdat->info.sbnk.entries[i].fileId == (uint16_t)-1)
+			continue;
+
+		fatentry_t *entry = &nsdat->fat.entries[nsdat->info.sbnk.entries[i].fileId];
+		char* filename = NULL;
+
+		if (bUseFname)
+			if (nsdat->symb.sseq.numEntries > i)
+				filename = nsdat->symb.sseq.names[i];
+
+		if (!filename) {
+			snprintf(tempfname, sizeof(tempfname), "SBNK_%04d", i);
+			filename = tempfname;
+		}
+
+		verbose("Prossessing Sbnk #%d:   ", i);
+		verbose("File %s\n", filename);
+		processIndicator();
+
+		//determine filename
+		snprintf(outputfile, MAX_PATH, "%s.sbnk", filename);
+		FILE_outPutFileFromBuff(outputfile, entry->file, entry->size);
+		numSBNK++;
+	}
+	printf("\n");
+	FILE_chdir("..");
+
+	FILE_chdir(DIR_STRM);
+	printf("Extracting STRM:\n");
+	for (uint32_t i = 0; i < nsdat->info.strm.index.numEntries; i++) {
+		if (nsdat->info.strm.entries[i].fileId == (uint16_t)-1)
+			continue;
+
+		fatentry_t *entry = &nsdat->fat.entries[nsdat->info.strm.entries[i].fileId];
+		char* filename = NULL;
+
+		if (bUseFname)
+			if (nsdat->symb.sseq.numEntries > i)
+				filename = nsdat->symb.sseq.names[i];
+
+		if (!filename) {
+			snprintf(tempfname, sizeof(tempfname), "STRM_%04d", i);
+			filename = tempfname;
+		}
+
+		verbose("Prossessing Strm #%d:    ", i);
+		verbose("File %s\n", filename);
+		processIndicator();
+
+		if(bDecodeFile){
+			snprintf(outputfile, MAX_PATH, "%s.wav", filename);
+			//STRM open
+			nsstrm = nsStrmCreate(entry->file, entry->size);
+			if (!nsstrm) {
+				printf("STRM open error.\n");
+				continue;
+			}
+			if(!nsStrmWriteToWaveFile(nsstrm, outputfile)) {
+				printf("WAVE write error.\n");
+				nsStrmDelete(nsstrm);
+				continue;
+			}
+			else numSTRM++;
+			nsStrmDelete(nsstrm);
+		} else {
+			snprintf(outputfile, MAX_PATH, "%s.strm", filename);
+			FILE_outPutFileFromBuff(outputfile, entry->file, entry->size);
+			numSTRM++;
+		}
+	}
+	printf("\n");
+	FILE_chdir("..");
 
 	printf("Total written files:\n");
-	printf("    SSEQ:%d\n", numSSEQ);
-	printf("    SBNK:%d\n", numSBNK);
-	printf("    STRM:%d\n", numSTRM);
-	printf("    %s:%d\n", bDecodeFile ? "SWAV" : "SWAR", numSWAR);
+	printf("    SSEQ: %d\n", numSSEQ);
+	printf("    SBNK: %d\n", numSBNK);
+	printf("    STRM: %d\n", numSTRM);
+	printf("    %s: %d\n", bDecodeFile ? "SWAV" : "SWAR", numSWAR);
 }
