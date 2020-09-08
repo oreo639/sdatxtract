@@ -95,12 +95,43 @@ int main(int argc, char* argv[])
 				return 1;
 	}
 
+	verbose("======================\n");
+	verbose("Options: (1=enabled/0=disabled)\n");
+	verbose("bDecodeFile:%d\n", bDecodeFile);
+	verbose("bVerboseMessages:%d\n", bVerboseMessages);
+	verbose("bUseFname:%d\n", bUseFname);
+	verbose("======================\n");
+
 	/* input files */
 	for(; optind < argc; optind++) {
-		SdatX sdatxtractor(argv[optind]);
+		bool isNds = false;
 
-		if (!sdatxtractor.Extract())
-			printf("Failed to extract file: %s\n", argv[optind]);
+		std::vector<SdatX> sdats;
+		SdatX::Init(argv[optind], sdats, isNds);
+		if (!sdats.size()) {
+			warning("No SDATs found in file: %s\n", argv[optind]);
+		} else {
+			if (isNds) {
+				std::string outdir = fs::path(argv[optind]).stem();
+				fs::create_directory(outdir);
+				fs::current_path(outdir);
+			}
+
+			for (uint32_t i = 0; i < sdats.size(); i++) {
+				if (bExtractSdat) {
+					if (!sdats[i].Write())
+						warning("Failed to write SDAT: %s\n", argv[optind]);
+				} else {
+					if (!sdats[i].Extract())
+						warning("Failed to extract file: %s\n", argv[optind]);
+				}
+			}
+
+			if (isNds)
+				fs::current_path("..");
+		}
+
+		sdats.clear();
 	}
 	return 0;
 }

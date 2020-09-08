@@ -2,16 +2,25 @@
 
 #include "memfile.hpp"
 
-struct SdatX {
-	std::string m_Filepath;
-	std::streamoff m_Length;
+class SdatX {
+	public:
 
-	MemFile* m_File;
+		SdatX(const std::string &filepath);
+		SdatX(const std::string &name, uint8_t* data, uint32_t size);
+		~SdatX();
 
-	//std::map<int, Swar*> Swars;
+		bool Extract();
+		bool Write();
 
-	SdatX(const std::string &filepath);
-	~SdatX();
+		static bool Init(const std::string &filepath, std::vector<SdatX> &sdats, bool &isNds);
 
-	bool Extract();
+	private:
+
+		std::string m_Filepath;
+		std::streamoff m_Length;
+
+		std::shared_ptr<MemFile> m_File = nullptr;
+
+		//std::map<int, Swar*> Swars;
+
 };

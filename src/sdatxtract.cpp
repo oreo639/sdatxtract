@@ -13,21 +13,72 @@ extern "C" {
 #include "decoder/sseq2mid.h"
 }
 
-SdatX::SdatX(const std::string& filepath) : m_Filepath(filepath)
-{
-	verbose("======================\n");
-	verbose("Options: (1=enabled/0=disabled)\n");
-	verbose("bDecodeFile:%d\n", bDecodeFile);
-	verbose("bVerboseMessages:%d\n", bVerboseMessages);
-	verbose("bUseFname:%d\n", bUseFname);
-	verbose("======================\n");
+bool SdatXI_FindSdat(const std::string &filepath, std::vector<SdatX> &sdats) {
+	uint8_t sdatMagic[] = {'S','D','A','T',0xFF,0xFE,0x00,0x01};
 
+	std::ifstream ifs(filepath, std::ios::binary | std::ios::ate);
+	uint32_t mlength = ifs.tellg();
+
+	if (!ifs.good() || mlength < 0x400)
+		return false;
+
+	MemFile mfile = MemFile(filepath, mlength);
+
+	{
+		ifs.seekg(0, std::ios::beg);
+		ifs.read(reinterpret_cast<char*>(mfile.GetRawPtr()), mlength);
+		ifs.close();
+	}
+
+	for (uint32_t i = 0; i + 4 < mfile.GetSize(); i++) {
+		if(!memcmp((mfile.GetRawPtr() + i), sdatMagic, sizeof(sdatMagic))) {
+			verbose("SDAT found!\n");
+
+			mfile.m_Offset = i+0xC;
+			bool p1 = mfile.Read<uint16_t>() < 0x100;
+			mfile.m_Offset = i+0x10;
+			bool p2 = mfile.Read<uint32_t>() < 0x100;
+
+			if (p1 && p2) {
+				verbose("SDAT confirmed!\n");
+				verbose("Reading sdat %d.\n", sdats.size());
+
+				mfile.m_Offset = i+0x08;
+				sdats.emplace_back(std::to_string(sdats.size()), mfile.GetRawPtr() + i, mfile.Read<uint32_t>());
+			}
+			else {
+				verbose("SDAT rejected!\n");
+			}
+		}
+	}
+
+	printf("Total SDATs found: %d\n", sdats.size());
+	return true;
+}
+
+bool SdatX::Init(const std::string &filepath, std::vector<SdatX> &sdats, bool &isNds) {
+	if (!File::Exists(filepath)) {
+		error("Failed to open file.\n");
+		return false;
+	}
+
+	if (!SDAT::Verify(filepath)) {
+		isNds = true;
+		SdatXI_FindSdat(filepath, sdats);
+	} else
+		sdats.emplace_back(filepath);
+
+	return true;
+}
+
+SdatX::SdatX(const std::string &filepath) : m_Filepath(filepath)
+{
 	if (SDAT::Verify(m_Filepath)) {
 		std::ifstream ifs(m_Filepath, std::ios::binary | std::ios::ate);
 		m_Length = ifs.tellg();
 
 		if (ifs.good()) {
-			m_File = new MemFile(m_Filepath, (uint32_t)m_Length);
+			m_File = std::make_shared<MemFile>(m_Filepath, (uint32_t)m_Length);
 
 			ifs.seekg(0, std::ios::beg);
 			ifs.read(reinterpret_cast<char*>(m_File->GetRawPtr()), m_Length);
@@ -38,11 +89,26 @@ SdatX::SdatX(const std::string& filepath) : m_Filepath(filepath)
 	}
 }
 
+SdatX::SdatX(const std::string &name, uint8_t* data, uint32_t size) : m_Filepath(name)
+{
+	m_File = std::make_shared<MemFile>(m_Filepath, data, size);
+}
+
 SdatX::~SdatX()
 {
-	if (m_File) {
-		delete m_File;
-	}
+	m_File = nullptr;
+}
+
+bool SdatX::Write()
+{
+	std::string outfile = "sdat_file_"+std::string(fs::path(m_Filepath).stem())+".sdat";
+	printf("Outputting to file %s\n", outfile.c_str());
+
+	std::ofstream ofs(outfile, std::ofstream::binary);
+	ofs.write(reinterpret_cast<const char*>(m_File->GetRawPtr()), m_File->GetSize());
+	ofs.close();
+
+	return true;
 }
 
 bool SdatX::Extract()
@@ -145,6 +211,7 @@ bool SdatX::Extract()
 					printf("SWAR open error: No files found to extract.\n");
 
 				SWAREX_exit(&swarx);
+				fs::current_path("..");
 				continue;
 			}
 
@@ -155,6 +222,7 @@ bool SdatX::Extract()
 				if(SWAV_genSwav(&swarx.file[j], &swav)){
 					printf("SWAV create error.\n");
 					SWAV_clear(&swav);
+					fs::current_path("..");
 					continue;
 				}
 				if (bDecodeFile) {
@@ -162,6 +230,7 @@ bool SdatX::Extract()
 					if(!nsswav){
 						printf("SWAV open error.\n");
 						SWAV_clear(&swav);
+						fs::current_path("..");
 						continue;
 					}
 
@@ -169,6 +238,7 @@ bool SdatX::Extract()
 						printf("WAVE write error.\n");
 						nsSwavDelete(nsswav);
 						SWAV_clear(&swav);
+						fs::current_path("..");
 						continue;
 					}
 					nsSwavDelete(nsswav);

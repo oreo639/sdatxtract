@@ -29,6 +29,20 @@
 #define error(...) printf("[Err]: " __VA_ARGS__)
 #define warning(...) printf("[Warn]: " __VA_ARGS__)
 
+namespace File {
+	static inline bool Exists(const std::string &filename) {
+		FILE *fp = fopen(filename.c_str(), "rb");
+
+		if(!fp) {
+			return false;
+		}
+
+		fclose(fp);
+
+		return true;
+	}
+}
+
 namespace fs = std::filesystem;
 
 // Global variables.

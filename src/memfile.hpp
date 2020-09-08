@@ -7,21 +7,22 @@
 
 class MemFile {
 	public:
-
 		MemFile(const std::string& filename, uint32_t length) : m_FileName(filename), m_Length(length) {
 			m_Data = new uint8_t[length];
+			m_IsInit = true;
 		}
 
-		MemFile(uint32_t length) : m_Length(length) {
-			m_Data = new uint8_t[length];
+		MemFile(const std::string& filename, uint8_t* ptr, uint32_t length) : m_FileName(filename), m_Length(length) {
+			m_Data = new uint8_t[m_Length];
+			memcpy(m_Data, ptr, m_Length);
+			m_IsInit = true;
 		}
-
-		MemFile(const std::string& filename, uint8_t* ptr, uint32_t length) : m_FileName(filename), m_Data(ptr), m_Length(length) {}
-
-		MemFile(uint8_t* ptr, uint32_t length) : m_Data(ptr), m_Length(length) {}
 
 		~MemFile() {
-			delete[] m_Data;
+			if (m_Data) {
+				delete[] m_Data;
+				m_Data = NULL;
+			}
 		}
 
 		std::string GetFilename() {
@@ -38,6 +39,10 @@ class MemFile {
 
 		uint8_t* GetCurPos() {
 			return m_Data+m_Offset;
+		}
+
+		bool Good() {
+			return m_IsInit;
 		}
 
 		long unsigned GetOffset() {
@@ -94,12 +99,13 @@ class MemFile {
 			return size;
 		}
 
-		long unsigned m_Offset;
+		long unsigned m_Offset = 0;
 
 	private:
 		std::string m_FileName = "filename not avaliable";
-		uint8_t* m_Data = nullptr;
-		uint32_t m_Length;
+		uint8_t* m_Data = NULL;
+		uint32_t m_Length = 0;
+		bool m_IsInit;
 };
 
 #endif
