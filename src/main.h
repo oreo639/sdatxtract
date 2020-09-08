@@ -1,17 +1,18 @@
 #ifndef __SDATXTRACT_MAIN_H__
 #define __SDATXTRACT_MAIN_H__
 
+#include <string>
+#include <vector>
+#include <filesystem>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <memory.h>
 
-#include "file.h" //File i/o wraper.
 #include "config.h" //Compile settings.
+#include "common.hpp"
 
-#include "macrotools.h"
+#include "htools/macrotools.h"
 
 #define MAX_PATH 260
 
@@ -25,23 +26,10 @@
 #define processIndicator() printf(".");
 #define DEBUG(...) printf("[" __FILE__ "] " STRINGIFY(__LINE__) ": " __VA_ARGS__)
 
-static inline uint32_t getUint(uint8_t* data) {
-	uint32_t a;
-	memcpy(&a, data, sizeof(uint32_t));
-	return a;
-}
+#define error(...) printf("[Err]: " __VA_ARGS__)
+#define warning(...) printf("[Warn]: " __VA_ARGS__)
 
-static inline uint16_t getShort(uint8_t* data) {
-	uint16_t a;
-	memcpy(&a, data, sizeof(uint16_t));
-	return a;
-}
-
-static inline uint8_t getByte(uint8_t* data) {
-	uint8_t a;
-	memcpy(&a, data, sizeof(uint8_t));
-	return a;
-}
+namespace fs = std::filesystem;
 
 // Global variables.
 extern bool bDecodeFile;

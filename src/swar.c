@@ -1,5 +1,16 @@
-#include "main.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include "swar.h"
+
+static inline uint32_t getUint(uint8_t* data) {
+	uint32_t a;
+	memcpy(&a, data, sizeof(uint32_t));
+	return a;
+}
 
 int SWAREX_init(SWAR* swar, uint8_t *image, uint32_t size) {
 	if(!memcmp(image, "SWAR", 4)){

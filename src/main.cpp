@@ -1,6 +1,10 @@
+#include <string>
+
+#include <stdio.h>
 #include <getopt.h>
 
-#include "sdatxtract.h"
+#include "main.h"
+#include "sdatxtract.hpp"
 
 //====== global vars =======
 bool bDecodeFile = false;
@@ -35,10 +39,10 @@ void printUsage(void) {
 	};
 	printf("%s v%s\n", APP_NAME, APP_VERSION_FULL);
 	printf("Sdat sound archive extraction utility for nds games.\n");
-	printf("%s is able to read most nds games and sdat files to extract (some) of \nthe audio data they hold.\n\n", APP_NAME);
+	printf("%s is able to read most sdat files to extract (some) of \nthe audio data they hold.\n\n", APP_NAME);
 	printf("Usage: sdatxtract <Options> <Input>\n");
 	printf("Options:\n");
-	for(int optIndex = 0; optIndex < sizeof(options) / sizeof(options[optIndex]); optIndex += 3){
+	for(long unsigned optIndex = 0; optIndex < sizeof(options) / sizeof(options[optIndex]); optIndex += 3){
 		printf("%-2s  %-12s  %s\n", options[optIndex], options[optIndex + 1], options[optIndex + 2]);
 	}
 }
@@ -93,7 +97,10 @@ int main(int argc, char* argv[])
 
 	/* input files */
 	for(; optind < argc; optind++) {
-		extractAudio(argv[optind]);
+		SdatX sdatxtractor(argv[optind]);
+
+		if (!sdatxtractor.Extract())
+			printf("Failed to extract file: %s\n", argv[optind]);
 	}
 	return 0;
 }
