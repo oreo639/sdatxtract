@@ -12,7 +12,7 @@ class SdatX {
 		bool Extract();
 		bool Write();
 
-		static bool Init(const std::string &filepath, std::vector<SdatX> &sdats, bool &isNds);
+		static std::vector<SdatX> Init(const std::string &filepath, bool &isNds);
 
 	private:
 

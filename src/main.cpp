@@ -98,16 +98,17 @@ int main(int argc, char* argv[])
 	verbose("======================\n");
 	verbose("Options: (1=enabled/0=disabled)\n");
 	verbose("bDecodeFile:%d\n", bDecodeFile);
+	verbose("bGetSwav:%d\n", bGetSwav);
 	verbose("bVerboseMessages:%d\n", bVerboseMessages);
 	verbose("bUseFname:%d\n", bUseFname);
+	verbose("bExtractSdat:%d\n", bExtractSdat);
 	verbose("======================\n");
 
 	/* input files */
 	for(; optind < argc; optind++) {
 		bool isNds = false;
 
-		std::vector<SdatX> sdats;
-		SdatX::Init(argv[optind], sdats, isNds);
+		std::vector<SdatX> sdats = SdatX::Init(argv[optind], isNds);
 		if (!sdats.size()) {
 			warning("No SDATs found in file: %s\n", argv[optind]);
 		} else {

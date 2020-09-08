@@ -13,14 +13,15 @@ extern "C" {
 #include "decoder/sseq2mid.h"
 }
 
-bool SdatXI_FindSdat(const std::string &filepath, std::vector<SdatX> &sdats) {
+std::vector<SdatX> SdatXI_FindSdat(const std::string &filepath) {
+	std::vector<SdatX> sdats;
 	uint8_t sdatMagic[] = {'S','D','A','T',0xFF,0xFE,0x00,0x01};
 
 	std::ifstream ifs(filepath, std::ios::binary | std::ios::ate);
 	uint32_t mlength = ifs.tellg();
 
 	if (!ifs.good() || mlength < 0x400)
-		return false;
+		return sdats;
 
 	MemFile mfile = MemFile(filepath, mlength);
 
@@ -53,22 +54,23 @@ bool SdatXI_FindSdat(const std::string &filepath, std::vector<SdatX> &sdats) {
 	}
 
 	printf("Total SDATs found: %d\n", sdats.size());
-	return true;
+	return sdats;
 }
 
-bool SdatX::Init(const std::string &filepath, std::vector<SdatX> &sdats, bool &isNds) {
+std::vector<SdatX> SdatX::Init(const std::string &filepath, bool &isNds) {
+	std::vector<SdatX> sdats;
 	if (!File::Exists(filepath)) {
 		error("Failed to open file.\n");
-		return false;
+		return sdats;
 	}
 
 	if (!SDAT::Verify(filepath)) {
 		isNds = true;
-		SdatXI_FindSdat(filepath, sdats);
+		sdats = SdatXI_FindSdat(filepath);
 	} else
 		sdats.emplace_back(filepath);
 
-	return true;
+	return sdats;
 }
 
 SdatX::SdatX(const std::string &filepath) : m_Filepath(filepath)
@@ -206,9 +208,9 @@ bool SdatX::Extract()
 			int ret = 0;
 			if((ret = SWAREX_init(&swarx, swar.Offset, swar.Length))) {
 				if (ret == SWARE_BAD)
-					printf("SWAR open error: Did not pass validation.\nMay be corrupted?\n");
+					error("SWAR: Did not pass validation.\nMay be corrupted?\n");
 				if (ret == SWARE_EMPTY)
-					printf("SWAR open error: No files found to extract.\n");
+					warning("SWAR: No files found to extract.\n");
 
 				SWAREX_exit(&swarx);
 				fs::current_path("..");
@@ -301,7 +303,7 @@ bool SdatX::Extract()
 	printf("Total written files:\n");
 	printf("    SSEQ:%d\n", numSSEQ);
 	printf("    SBNK:%d\n", numSBNK);
-	printf("    %s:%d\n", bDecodeFile ? "SWAV" : "SWAR", numSWAR);
+	printf("    %s:%d\n", (bDecodeFile || bGetSwav) ? "SWAV" : "SWAR", numSWAR);
 	printf("    STRM:%d\n", numSTRM);
 
 	return true;
