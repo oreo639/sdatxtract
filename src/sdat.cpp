@@ -176,7 +176,7 @@ bool SDAT::ReadHeader(MemFile& mf, SdatFiles& files) {
 		FTableEntry entry = fatEnts[id];
 		sseq.Offset   = entry.Offset;
 		sseq.Length   = entry.Length;
-		if (!haveSYMBs || symbs[SDATI_SSEQ][i].Name.empty())
+		if (!bUseFname || !haveSYMBs || symbs[SDATI_SSEQ][i].Name.empty())
 			sseq.FileName = "SSEQ_"+std::to_string(i);
 		else
 			sseq.FileName = symbs[SDATI_SSEQ][i].Name;
@@ -194,7 +194,7 @@ bool SDAT::ReadHeader(MemFile& mf, SdatFiles& files) {
 		FTableEntry entry = fatEnts[id];
 		sbnk.Offset   = entry.Offset;
 		sbnk.Length   = entry.Length;
-		if (!haveSYMBs || symbs[SDATI_SBNK][i].Name.empty())
+		if (!bUseFname || !haveSYMBs || symbs[SDATI_SBNK][i].Name.empty())
 			sbnk.FileName = "SBNK_"+std::to_string(i);
 		else
 			sbnk.FileName = symbs[SDATI_SBNK][i].Name;
@@ -212,7 +212,7 @@ bool SDAT::ReadHeader(MemFile& mf, SdatFiles& files) {
 		FTableEntry entry = fatEnts[id];
 		swar.Offset   = entry.Offset;
 		swar.Length   = entry.Length;
-		if (!haveSYMBs || symbs[SDATI_SWAR][i].Name.empty())
+		if (!bUseFname || !haveSYMBs || symbs[SDATI_SWAR][i].Name.empty())
 			swar.FileName = "SWAR_"+std::to_string(i);
 		else
 			swar.FileName = symbs[SDATI_SWAR][i].Name;
@@ -230,7 +230,7 @@ bool SDAT::ReadHeader(MemFile& mf, SdatFiles& files) {
 		FTableEntry entry = fatEnts[id];
 		strm.Offset   = entry.Offset;
 		strm.Length   = entry.Length;
-		if (!haveSYMBs || symbs[SDATI_STRM][i].Name.empty())
+		if (!bUseFname || !haveSYMBs || symbs[SDATI_STRM][i].Name.empty())
 			strm.FileName = "STRM_"+std::to_string(i);
 		else
 			strm.FileName = symbs[SDATI_STRM][i].Name;
