@@ -1,4 +1,4 @@
-language: c
+language: cpp
 
 notifications:
   email: false
@@ -6,22 +6,30 @@ notifications:
 matrix:
   include:
     - os: linux
-      dist: xenial
-      sudo: required
+      dist: focal
       compiler: gcc
+      addons:
+          apt:
+              packages:
+                  - gcc-9
+                  - g++-9
     - os: linux
-      dist: xenial
-      sudo: required
+      dist: focal
       compiler: clang
-    - os: osx
-      compiler: gcc
+      addons:
+          apt:
+              packages:
+                  - clang-10
+                  - clang++-10
     - os: osx
       compiler: clang
+      osx_image: xcode12
 
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
-      - cmake-data
       - cmake
 
 script:
