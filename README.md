@@ -5,7 +5,9 @@ A comand line Nintendo ds Sound DATa extraction utility.
 
 What is it?
 
-It is a utility for dumping sdats from nds files, extracting contained files from sdats, and converting the contained files to standard formats.
+It is a utility for extracting files from sdats and converting the contained files to standard formats.
+
+You can obtain the sdat by using [godmode9](https://github.com/d0k3/GodMode9), [ndstool](https://github.com/devkitPro/ndstool), or [tinke](https://github.com/pleonex/tinke).
 
 ## Building
 You can use either cmake or autotools to build this program and I will cover both.
@@ -19,11 +21,13 @@ You can use either cmake or autotools to build this program and I will cover bot
 3. Once it is done, type `make`
 
 ## Credits
-Vgmtrans: Symb parser prety much riped from them, with minor changes being made to support this codebase ofc.
+[Vgmtrans](https://github.com/vgmtrans/vgmtrans): Symb parser prety heavily based on it.
 
-Loveemu: Sseq2mid and strm2wav are used in this project.
+[Loveemu](https://github.com/loveemu): Sseq2mid and strm2wav are used in this project.
 
 Ndssndext: Largely inspired by ndssndext, however do to the aplication being unlisenced, this application was rewriten.
+
+[caesar](https://github.com/kr3nshaw/caesar): Current rewrite took heavy inspiration from it.
 
 SDAT documentation; wouldn't be possible without the hard work of:
 + Crystal - the author of CrystalTile2.exe 
