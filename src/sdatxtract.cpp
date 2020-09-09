@@ -103,7 +103,7 @@ SdatX::~SdatX()
 
 bool SdatX::Write()
 {
-	std::string outfile = "sdat_file_"+std::string(fs::path(m_Filepath).stem())+".sdat";
+	std::string outfile = "sdat_file_"+std::string(fs::path(m_Filepath).stem().string())+".sdat";
 	printf("Outputting to file %s\n", outfile.c_str());
 
 	std::ofstream ofs(outfile, std::ofstream::binary);
@@ -127,7 +127,7 @@ bool SdatX::Extract()
 
 	int numSSEQ = 0, numSTRM = 0, numSWAR = 0, numSBNK = 0;
 
-	std::string outdir = fs::path(m_Filepath).stem();
+	std::string outdir = fs::path(m_Filepath).stem().string();
 	printf("Outputting to directory %s\n", outdir.c_str());
 	fs::create_directory(outdir);
 	fs::current_path(outdir);

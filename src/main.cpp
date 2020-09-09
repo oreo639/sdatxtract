@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 			warning("No SDATs found in file: %s\n", argv[optind]);
 		} else {
 			if (isNds) {
-				std::string outdir = fs::path(argv[optind]).stem();
+				std::string outdir = fs::path(argv[optind]).stem().string();
 				fs::create_directory(outdir);
 				fs::current_path(outdir);
 			}
