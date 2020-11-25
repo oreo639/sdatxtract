@@ -7,7 +7,7 @@ What is it?
 
 It is a utility for dumping sdats from nds files, extracting contained files from sdats, and converting the contained files to standard formats.
 
-You can obtain also sdats by using [godmode9](https://github.com/d0k3/GodMode9), [ndstool](https://github.com/devkitPro/ndstool), or [tinke](https://github.com/pleonex/tinke).
+You can obtain sdats by using [godmode9](https://github.com/d0k3/GodMode9), [ndstool](https://github.com/devkitPro/ndstool), or [tinke](https://github.com/pleonex/tinke).
 
 ## Building
 You can use either cmake or autotools to build this program and I will cover both.
