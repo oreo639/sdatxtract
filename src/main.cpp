@@ -84,11 +84,10 @@ bool GET_OptionChar(int opt)
 
 int main(int argc, char* argv[])
 {
-	if(argc == 1){
+	if(argc <= 1){
 		/* no arguments */
 		printUsage();
-	}
-	else{
+	} else {
 		int opt;
 		while((opt = getopt_long(argc, argv, ":cxnhSV", long_options, NULL)) != -1)
 			if (!GET_OptionChar(opt))
